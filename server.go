@@ -1,7 +1,6 @@
-package main
+package tapp
 
 import (
-	"os"
 	"fmt"
 	"time"
 	"math"
@@ -15,7 +14,6 @@ import (
 	"html/template"
 	"encoding/json"
 	"encoding/csv"
-	"io/ioutil"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 	"google.golang.org/appengine/log"
@@ -25,80 +23,9 @@ import (
 )
 
 var (
-	twitterApi *anaconda.TwitterApi
-	screenName string
+	TwitterApi *anaconda.TwitterApi
+	MyToken Credentials
 )
-const (
-	TWITTER_URL = "https://twitter.com/"
-	MEMCACHE_TWEET_KEY = "TWEETS"
-	MEMCACHE_USER_KEY = "USER."
-	TWEETS_TO_FETCH = 30
-	MIN_RATIO = float32(0.10)
-	MAX_PUT_SIZE int = 500
-	MAX_API_LOOKUP_SIZE int = 100
-	MIN_SEARCH_LENGTH int = 2
-	SEARCH_TIME_FORMAT = "Mon Jan 2 15:04:05 -0700 2006"
-	ARCHIVE_TIME_FORMAT = "2006-01-02 15:04:05 -0700"
-)
-
-type Token struct {
-	RequestToken string `json:"requestToken"`
-	RequestTokenSecret string `json:"requestTokenSecret"`
-	AccessToken string `json:"accessToken"`
-	AccessTokenSecret string `json:"accessTokenSecret"`
-	ConsumerKey string `json:"consumerKey"`
-	ConsumerKeySecret string `json:"consumerKeySecret"`
-	ScreenName string `json:"screenName"`
-}
-
-type Media struct {
-	IdStr string
-	Url string
-	ExpandedUrl string
-	Type string
-	MediaUrl string
-}
-
-type MyTweet struct {
-	Id int64
-	IdStr string
-	ReplyTo int64
-	Created int64
-	Updated int64
-
-	Faves int
-	Rts int
-	Ratio float32
-
-	Text string
-	Url string
-	Deleted bool
-	Media []Media
-}
-
-type User struct {
-	ScreenName string
-	Id int64
-	Url string
-	ProfileImageUrlHttps string
-	Name string
-	Description string
-	Followers int
-	Following int
-	TweetCount int64
-	Location string
-	Verified bool
-	Link string
-	Updated int64
-}
-
-type SearchTerm struct {
-	Original string
-	Text string
-	Upper string
-	Quoted bool
-	RegExp *regexp.Regexp
-}
 
 func init() {
 	// default pages
@@ -125,13 +52,9 @@ func init() {
 	// admin page requests
 	http.HandleFunc("/admin", indexHandler)
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
-	http.HandleFunc("/admin/archive/export", archiveExportHandler)
 
-	twitterApi = loadCredentials()
-}
 
-func archiveExportHandler(w http.ResponseWriter, r *http.Request) {
-	//ctx := appengine.NewContext(r)
+	TwitterApi, MyToken = LoadCredentials()
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +92,7 @@ func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
 			// if row["retweeted_status_id"] != "" || (row["in_reply_to_status_id"] != "" &&
 			// 	row["in_reply_to_user_id"] != userIdStr) {
 			if row["retweeted_status_id"] != "" || row["in_reply_to_status_id"] != "" {
-				//log.Debugf(ctx, "skipping row: %v", row)
+
 			} else {
 				id, _ := strconv.Atoi(row["tweet_id"])
 				tweets = append(tweets, MyTweet{
@@ -177,7 +100,7 @@ func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
 					IdStr: row["tweet_id"],
 					Created: makeTimestamp(parseTimestamp(row["timestamp"], ARCHIVE_TIME_FORMAT)),
 					Updated: makeTimestamp(time.Now()),
-					Url: TWITTER_URL + screenName + "/status/" + row["tweet_id"],
+					Url: TWITTER_URL + MyToken.ScreenName + "/status/" + row["tweet_id"],
 					Deleted: false,
 					Media: nil,
 				})
@@ -209,9 +132,8 @@ func tweetHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	id, _ := strconv.Atoi(params.Get("id"))
 
-	key := datastore.NewKey(ctx, "MyTweet", "", int64(id), nil)
-	tweet := new(MyTweet)
-	err := datastore.Get(ctx, key, tweet)
+	tweet := MyTweet{Id: int64(id)}
+	err := datastore.Get(ctx, tweet.GetKey(ctx), &tweet)
 	if err != nil {
 		log.Errorf(ctx, "Error getting tweet from datastore: %v", err)
 		http.Error(w, "Error", http.StatusNotFound)
@@ -245,7 +167,7 @@ func tweetsHandler(w http.ResponseWriter, r *http.Request) {
 		tweets, err = getLatestTweets(ctx, i)
 	} else if which == "search" {
 		i, _ := strconv.Atoi(params.Get("page"))
-		search := removePunctuation(strings.TrimSpace(params.Get("search")), false)
+		search := RemovePunctuation(strings.TrimSpace(params.Get("search")), false)
 		tweets, err = getSearchTweets(ctx, search, params.Get("order"), i)
 	} else {
 		log.Errorf(ctx, "Error invalid tweet type: %v", which)
@@ -312,6 +234,7 @@ func indexOrErrorHandler(w http.ResponseWriter, r *http.Request) {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// http.ServeFile(w, r, "html/admin.html")
 	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "MyToken: %v; API: %v", MyToken, TwitterApi)
 	user, err := getUser(ctx)
 	if err != nil {
 		log.Errorf(ctx, "Error fetching user: %v", err)
@@ -392,14 +315,14 @@ func fetchTweetsHandler(w http.ResponseWriter, r *http.Request) {
 
 func getUser(ctx context.Context) (*User, error) {
 	var cached *User
-	_, err := memcache.JSON.Get(ctx, MEMCACHE_USER_KEY + screenName, &cached)
+	_, err := memcache.JSON.Get(ctx, MEMCACHE_USER_KEY + MyToken.ScreenName, &cached)
 	if err != nil {
 		log.Errorf(ctx, "failed to fetch user from memcache: %v", err)
 	}
 
 	if cached == nil {
 		var user *User
-		user, err = getDataStoreUser(ctx, screenName)
+		user, err = getDataStoreUser(ctx, MyToken.ScreenName)
 		if err != nil || user == nil {
 			fetchAndStoreUser(ctx)
 			return user, nil
@@ -410,8 +333,8 @@ func getUser(ctx context.Context) (*User, error) {
 }
 
 func fetchAndStoreUser(ctx context.Context) (*User, error) {
-	twitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
-	anacondaUser, err := twitterApi.GetUsersShow(screenName, url.Values{
+	TwitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
+	anacondaUser, err := TwitterApi.GetUsersShow(MyToken.ScreenName, url.Values{
 		"include_entities": {"1"},
 	})
 
@@ -437,12 +360,12 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 	}
 
 	store := &memcache.Item{
-		Key: MEMCACHE_USER_KEY + screenName,
+		Key: MEMCACHE_USER_KEY + MyToken.ScreenName,
 		Object: *user,
 	}
 	memcache.JSON.Set(ctx, store)
 
-	if err = storeUser(ctx, user); err != nil {
+	if err = user.Store(ctx); err != nil {
 		log.Errorf(ctx, "failed to store user: %v", err)
 		return nil, err
 	}
@@ -584,7 +507,7 @@ func checkTweets(ctx context.Context, tweets []MyTweet) ([]MyTweet, error) {
 	if len(tweets) == 0 {
 		return nil, nil
 	}
-	twitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
+	TwitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
 
 	out := []MyTweet{}
 	ids := []int64{}
@@ -600,7 +523,7 @@ func checkTweets(ctx context.Context, tweets []MyTweet) ([]MyTweet, error) {
 		ids = append(ids, t.Id)
 	}
 
-	aTweets, err := twitterApi.GetTweetsLookupByIds(ids, vals)
+	aTweets, err := TwitterApi.GetTweetsLookupByIds(ids, vals)
 	if err != nil {
 		return nil, err
 	}
@@ -665,8 +588,7 @@ func getLatestTweet(ctx context.Context) (*MyTweet, error) {
 func storeTweets(ctx context.Context, tweets []MyTweet) error {
 	keys := []*datastore.Key{}
 	for _, tweet := range tweets {
-		key := datastore.NewKey(ctx, "MyTweet", "", tweet.Id, nil)
-		keys = append(keys, key)
+		keys = append(keys, tweet.GetKey(ctx))
 	}
 
 	length := len(keys)
@@ -685,34 +607,21 @@ func storeTweets(ctx context.Context, tweets []MyTweet) error {
 	return nil
 }
 
-func storeUser(ctx context.Context, user *User) error {
-	key := datastore.NewKey(ctx, "User", user.ScreenName, 0, nil)
-	newKey, err := datastore.Put(ctx, key, user)
-	if err != nil {
-		log.Errorf(ctx, "Error storing user in db: %v", err)
-		return err
-	} else {
-		log.Infof(ctx, "Stored user: %v", newKey)
-	}
-	return nil
-}
-
 func getDataStoreUser(ctx context.Context, screenName string) (*User, error) {
-	key := datastore.NewKey(ctx, "User", screenName, 0, nil)
-	user := new(User)
-	err := datastore.Get(ctx, key, user)
+	user := User{ScreenName: screenName}
+	err := datastore.Get(ctx, user.GetKey(ctx), &user)
 	if err != nil {
 		log.Errorf(ctx, "Error getting user from datastore: %v", err)
 		return nil, err
 	}
-	return user, nil
+	return &user, nil
 }
 
 func fetchTweets(ctx context.Context, tweets []MyTweet, lastId int64, latestId int64) ([]MyTweet, error) {
-	twitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
+	TwitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
 	log.Infof(ctx, "Fetching Tweets (lastId): %v, (latestId): %v", lastId, latestId)
 	vals := url.Values{
-		"screen_name": {screenName},
+		"screen_name": {MyToken.ScreenName},
 		"count": {"200"},
 		"trim_user": {"1"},
 		"exclude_replies": {"1"},
@@ -724,7 +633,7 @@ func fetchTweets(ctx context.Context, tweets []MyTweet, lastId int64, latestId i
 	if latestId > 0 {
 		vals.Add("since_id", fmt.Sprintf("%v", latestId))
 	}
-	aTweets, err := twitterApi.GetUserTimeline(vals)
+	aTweets, err := TwitterApi.GetUserTimeline(vals)
 	if err != nil {
 		return tweets, err
 	}
@@ -759,7 +668,7 @@ func processTweets(tweets []anaconda.Tweet) ([]MyTweet, int64) {
 				Created: makeTimestamp(parseTimestamp(tweet.CreatedAt, SEARCH_TIME_FORMAT)),
 				Updated: makeTimestamp(time.Now()),
 				Text: tweet.FullText,
-				Url: TWITTER_URL + screenName + "/status/" + tweet.IdStr,
+				Url: TWITTER_URL + MyToken.ScreenName + "/status/" + tweet.IdStr,
 				Deleted: false,
 				Media: getMedia(&tweet),
 			}
@@ -826,14 +735,14 @@ func getTerms(search string) (terms [][]SearchTerm) {
 
 func searchTweets(tweets []MyTweet, terms [][]SearchTerm) (ret []MyTweet) {
 	for _, tweet := range tweets {
-		if tweetMatchesTerms(tweet, terms) {
+		if tweet.MatchesTerms(terms) {
 			ret = append(ret, tweet)
 		}
 	}
 	return ret
 }
 
-func removePunctuation(text string, quotes bool) string {
+func RemovePunctuation(text string, quotes bool) string {
 	var reg *regexp.Regexp
 	if quotes == true {
 		reg, _ = regexp.Compile("[^a-zA-Z0-9 ]")
@@ -841,30 +750,6 @@ func removePunctuation(text string, quotes bool) string {
 		reg, _ = regexp.Compile("[^a-zA-Z0-9 \"]")
 	}
 	return reg.ReplaceAllString(text, "")
-}
-
-func tweetMatchesTerms(tweet MyTweet, terms [][]SearchTerm) bool {
-	text := strings.ToUpper(removePunctuation(tweet.Text, true))
-	for _, or := range terms {
-		match := true
-		for _, term := range or {
-			if term.Quoted == true && term.RegExp != nil {
-				if term.RegExp.MatchString(text) == false {
-					match = false
-					break
-				}
-			} else {
-				if strings.Contains(text, term.Upper) == false {
-					match = false
-					break
-				}
-			}
-		}
-		if match == true {
-			return true
-		}
-	}
-	return false
 }
 
 func testTweet(tweet anaconda.Tweet) bool {
@@ -898,26 +783,4 @@ func min(num1 int, num2 int) int {
 
 func max(num1 int, num2 int) int {
 	return int(math.Max(float64(num1), float64(num2)))
-}
-
-func loadCredentials() (api *anaconda.TwitterApi) {
-	credentials, err := ioutil.ReadFile("credentials")
-	if err != nil {
-		os.Exit(1)
-	}
-
-	var token Token
-	err = json.Unmarshal([]byte(credentials), &token)
-	if err != nil {
-		os.Exit(1)
-	}
-
-	screenName = token.ScreenName
-
-	anaconda.SetConsumerKey(token.ConsumerKey)
-	anaconda.SetConsumerSecret(token.ConsumerKeySecret)
-	//api = anaconda.NewTwitterApi(token.AccessToken, token.AccessTokenSecret)
-	api = anaconda.NewTwitterApi("", "")
-
-	return api
 }

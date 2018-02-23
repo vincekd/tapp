@@ -78,7 +78,7 @@ handlers:
 # remove for deployment
 # - url: /node_modules
 #   static_dir: node_modules
-  
+
 # error handlers: redirect all other pages to /error 404
 - url: /error
   script: _go_app
