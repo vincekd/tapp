@@ -1,41 +1,36 @@
 const gulp = require("gulp"),
-      sass = require("node-sass"),
-      fs = require("fs"),
+      sass = require("gulp-sass"),
+      mkdirp = require("mkdirp"),
       Builder = require("systemjs-builder"),
       rename = require("gulp-rename"),
       uglify = require("gulp-uglify-es").default,
       ts = require("gulp-typescript");
 
-gulp.task("default", ["sass", "ts", "build", "uglify"], function() {
-    //TODO: create dist/js dist/css if not exist
+gulp.task("default", ["init-dist", "sass", "ts", "build", "uglify"], function() {
     console.log();
     console.log("!!! remember to remove 'node_modules' from app.yaml !!!");
     console.log();
 });
 
-gulp.task("sass", function() {
-    const scss = ["main", "theme", "admin"];
-    // compile scss
-    scss.forEach(file => {
-        sass.render({
-            "file": `src/scss/${file}.scss`,
-            "outFile": `dist/css/${file}.css`,
-            "outputStyle": "compressed"
-        }, (err, result) => {
-            if (err) {
-                console.error(err);
-            } else {
-                fs.writeFile(`dist/css/${file}.css`, result.css, err => {
-                    if (err) {
-                        console.error(err);
-                    }
-                });
-            }
-        });
-    });
+gulp.task("dev-watch", function() {
+    gulp.watch("./src/scss/*", ["sass"]);
+    gulp.watch("./src/ts/*", ["ts"]);
 });
 
-gulp.task("ts", function() {
+gulp.task("init-dist", function() {
+    return Promise.all([
+        new Promise(r => mkdirp("./dist/js/", () => r())),
+        new Promise(r => mkdirp("./dist/css/", () => r()))
+    ]);
+});
+
+gulp.task("sass", ["init-dist"], function() {
+    return gulp.src("./src/scss/*").
+        pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError)).
+        pipe(gulp.dest("./dist/css"));
+});
+
+gulp.task("ts", ["init-dist"], function() {
     let tsProject = ts.createProject("tsconfig.json");
     return tsProject.src().pipe(tsProject()).js.pipe(gulp.dest("./dist/js/"));
 });

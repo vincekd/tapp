@@ -36,6 +36,8 @@
         "gulp-uglify-es": "latest",
         "gulp-rename": "latest",
         "typescript": "latest",
-        "gulp-typescript": "latest"
+        "gulp-typescript": "latest",
+        "mkdirp": "latest",
+        "gulp-sass": "latest"
     }
 }
