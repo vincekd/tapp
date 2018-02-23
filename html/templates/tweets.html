@@ -1,0 +1,15 @@
+<div id="tweet-area"
+     infiniteScroll=""
+     debounce=""
+     [infiniteScrollDistance]="scrollDistance"
+     [infiniteScrollThrottle]="scrollThrottle"
+     [scrollWindow]="false"
+     (scrolled)="onScroll()">
+  <div></div>
+  <div id="tweets">
+    <h1>{{ name | Capitalize }} Tweets</h1>
+    <div class="tweet" *ngFor="let tweet of tweets" tweet-frag="" [tweet]="tweet" [showInternalLink]="true"></div>
+  </div>
+  <div loading-spinner="" *ngIf="loading"></div>
+  <div></div>
+</div>

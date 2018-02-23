@@ -1,0 +1,102 @@
+runtime: go
+api_version: go1
+
+handlers:
+- url: /
+  script: _go_app
+  secure: always
+- url: /index
+  script: _go_app
+  secure: always
+- url: /index.html
+  script: _go_app
+  secure: always
+- url: /latest
+  script: _go_app
+  secure: always
+- url: /best
+  script: _go_app
+  secure: always
+- url: /search
+  script: _go_app
+  secure: always
+- url: /user
+  script: _go_app
+  secure: always
+- url: /tweets
+  script: _go_app
+  secure: always
+- url: /tweet/([0-9]+)
+  script: _go_app
+  secure: always
+- url: /tweet
+  script: _go_app
+  secure: always
+
+# cron handlers
+- url: /update/user
+  script: _go_app
+  secure: always
+- url: /update/tweets
+  script: _go_app
+  secure: always
+- url: /fetch
+  script: _go_app
+  secure: always
+
+# admin handlers
+- url: /admin
+  script: _go_app
+  secure: always
+  login: admin
+- url: /admin/archive/import
+  script: _go_app
+  secure: always
+  login: admin
+- url: /admin/archive/export
+  script: _go_app
+  secure: always
+  login: admin
+
+# static dirs
+- url: /css
+  static_dir: dist/css
+  secure: always
+- url: /templates
+  static_dir: html/templates
+  secure: always
+- url: /js
+  static_dir: dist/js
+  secure: always
+- url: /media
+  static_dir: media
+  secure: always
+- url: /robots.txt
+  static_files: media/robots.txt
+  upload: media/robots.txt
+
+# remove for deployment
+# - url: /node_modules
+#   static_dir: node_modules
+  
+# error handlers: redirect all other pages to /error 404
+- url: /error
+  script: _go_app
+  secure: always
+- url: /.*
+  script: _go_app
+  secure: always
+
+#skip files
+skip_files:
+- .git/
+- node_modules/
+- ^(.*)\.log$
+- .gitignore
+- scripts/
+- scss/
+- ts/
+- gulpfile.js
+- tsconfig.json
+- tmp/
+- .dir-locals.el

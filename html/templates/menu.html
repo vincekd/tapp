@@ -1,0 +1,45 @@
+<div></div>
+<div id="header">
+  <img *ngIf="user" [src]="user?.ProfileImageUrlHttps" />
+  <div id="user-info">
+    <span id="username">
+      <span [textContent]="user?.Name"></span>
+      <span>-</span>
+    </span>
+    <a class="profile" target="_blank" [href]="user?.Url" id="user-handle">
+      @<span [textContent]="user?.ScreenName"></span>
+    </a>
+  </div>
+  <div>
+    <a id="menu" mat-button="" [matMenuTriggerFor]="menu">
+      <svg>
+        <line x1="0" y1="2" x2="20" y2="2"></line>
+        <line x1="0" y1="8" x2="20" y2="8"></line>
+        <line x1="0" y1="14" x2="20" y2="14"></line>
+      </svg>
+    </a>
+    <mat-menu #menu="matMenu" class="menu-dropdown" xPosition="before" yPosition="below">
+      <ul id="menu-options">
+        <li>
+          <a routerLink="/latest" routerLinkActive="active">
+            <i class="icon-bell"></i>
+            <span>Latest</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/best" routerLinkActive="active">
+            <i class="icon-heart"></i>
+            <span>Best</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/search" routerLinkActive="active">
+            <i class="icon-search"></i>
+            <span>Search</span>
+          </a>
+        </li>
+      </ul>
+    </mat-menu>
+  </div>
+</div>
+<div></div>

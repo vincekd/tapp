@@ -1,0 +1,41 @@
+{
+    "name": "twitter-page",
+    "version": "1.0.1",
+    "description": "A twitter profile page.",
+    "repository": {
+        "url": "https://github.com/vincekd/twitter-page"
+    },
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@angular/common": "latest",
+        "@angular/compiler": "latest",
+        "@angular/core": "latest",
+        "@angular/forms": "latest",
+        "@angular/http": "latest",
+        "@angular/router": "latest",
+        "@angular/material": "latest",
+        "@angular/cdk": "latest",
+        "@angular/animations": "latest",
+        "@angular/platform-browser": "latest",
+        "@angular/platform-browser-dynamic": "latest",
+        "hammerjs": "latest",
+        "rxjs": "latest",
+        "zone.js": "latest",
+        "systemjs": "latest",
+        "core-js": "latest",
+        "bignumber.js": "latest",
+        "ngx-infinite-scroll": "latest"
+    },
+    "devDependencies": {
+        "gulp": "latest",
+        "systemjs-builder": "latest",
+        "uglify-es": "latest",
+        "gulp-uglify-es": "latest",
+        "gulp-rename": "latest",
+        "typescript": "latest",
+        "gulp-typescript": "latest"
+    }
+}

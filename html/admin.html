@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densitydpi=device-dpi, user-scalable=0" />
+
+    <base href="/" />
+
+    <title>{{ .ScreenName }}</title>
+    <link rel="icon" type="image/png" id="icon-png" href="{{ .ProfileImageUrlHttps }}" />
+
+    <!-- icons -->
+    <link href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet">
+
+    <!-- custom styles -->
+    <link href="/css/admin.css" rel="stylesheet" />
+  </head>
+  <body class="">
+    <div id="wrapper">
+      <h1>Admin for @{{ .ScreenName }}</h1>
+
+      <div id="export">
+        <a href="/admin/archive/export">Export</a>
+      </div>
+
+      <div id="import">
+        <input type="file" accept=".csv"/>
+        <button type="button" id="import-btn">Import</button>
+      </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+  </body>
+</html>

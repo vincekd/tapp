@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densitydpi=device-dpi, user-scalable=0" />
+
+    <base href="/" />
+
+    <title>{{ .ScreenName }}</title>
+    <link rel="icon" type="image/png" id="icon-png" href="{{ .ProfileImageUrlHttps }}" />
+
+    <!-- icons -->
+    <link href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet">
+
+    <!-- custom styles -->
+    <link href="/css/theme.css" rel="stylesheet" />
+    <link href="/css/main.css" rel="stylesheet" />
+  </head>
+  <body class="">
+
+    <twitter-app></twitter-app>
+
+    <!-- <script src="/node_modules/systemjs/dist/system.src.js"></script>
+         <script src="/js/systemjs.config.js"></script>
+         <script>
+         System.import('/js/main.js').catch(err => console.error("error in system.import", err));
+         </script> -->
+    <script src="/js/app.min.js"></script>
+  </body>
+</html>
