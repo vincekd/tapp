@@ -217,11 +217,13 @@ func indexOrErrorHandler(w http.ResponseWriter, r *http.Request) {
 	name := path.Clean(r.URL.Path)
 	ctx := appengine.NewContext(r)
 	if r.Method == "GET" {
-		if name == "/" {
+		reg, _ := regexp.Compile("/tweet/[0-9]+")
+		if name == "/" || reg.MatchString(name) {
 			indexHandler(w, r)
 		} else if name == "/favicon.ico" {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
+			//TODO: make /error/404 or something...
 			http.Redirect(w, r, "/error", http.StatusMovedPermanently)
 		}
 	} else {
@@ -234,7 +236,6 @@ func indexOrErrorHandler(w http.ResponseWriter, r *http.Request) {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// http.ServeFile(w, r, "html/admin.html")
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "MyToken: %v; API: %v", MyToken, TwitterApi)
 	user, err := getUser(ctx)
 	if err != nil {
 		log.Errorf(ctx, "Error fetching user: %v", err)

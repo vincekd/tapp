@@ -26,7 +26,7 @@ handlers:
 - url: /tweets
   script: _go_app
   secure: always
-- url: /tweet/([0-9]+)
+- url: /tweet/[0-9]+
   script: _go_app
   secure: always
 - url: /tweet
