@@ -29,13 +29,13 @@
                name="search"
                maxlength="280"
                [(ngModel)]="search.text"
-               (keyup.enter)="doSearch()"
+               (keyup.enter)="setLoc()"
                autocomplete="off" />
       </div>
       <div>
         <button name="submit"
                 type="button"
-                (click)="doSearch()">Search</button>
+                (click)="setLoc()">Search</button>
       </div>
     </div>
     <div *ngIf="!search.resultsEmpty || tweets.length > 0">

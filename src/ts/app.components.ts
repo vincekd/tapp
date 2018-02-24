@@ -4,7 +4,8 @@ import {
     OnInit
 } from '@angular/core';
 import {
-    ActivatedRoute
+    ActivatedRoute,
+    Router
 } from '@angular/router';
 import {
     MatSnackBar
@@ -107,19 +108,18 @@ export class SearchComponent extends TweetsComponent {
     page: number = 0;
     tweets: Array<Tweet> = [];
 
-    constructor(tweetServ: TweetService, private snackBar: MatSnackBar) {
+    constructor(tweetServ: TweetService, private snackBar: MatSnackBar, private router: Router, private activeRoute: ActivatedRoute) {
         super(tweetServ)
         this.name = "search";
     }
 
     ngOnInit(): void {
-        if (location.search.length > 0) {
-            let split: any = {};
-            location.search.substring(1).split("&").forEach(a => {
-                let b = a.split("=");
-                split[b[0]] = b[1];
-            });
-            this.search.text = decodeURIComponent(split.q || "");
+        this.activeRoute.queryParamMap.subscribe(params => {
+            let split: any = {
+                q: decodeURIComponent(params.get("q") || ""),
+                o: params.get("o")
+            };
+            this.search.text = split.q || "";
             if (split.o) {
                 if (split.o.startsWith("-")) {
                     this.search.ascending = false;
@@ -128,8 +128,10 @@ export class SearchComponent extends TweetsComponent {
                     this.search.order = split.o;
                 }
             }
-            this.doSearch();
-        }
+            if (this.search.text.length > 0) {
+                this.doSearch();
+            }
+        });
     }
 
     toggleSortOrder(): void {
@@ -156,7 +158,6 @@ export class SearchComponent extends TweetsComponent {
         } else if (!this.checkChange()) {
             this.snackBar.open("Search parameters haven't changed.", "Dismiss", {duration: 5000});
         } else {
-            this.setLoc();
             this.page = 0;
             this.tweets = [];
 
@@ -176,9 +177,13 @@ export class SearchComponent extends TweetsComponent {
         return (this.search.ascending ? "" : "-") + this.search.order;
     }
 
-    private setLoc(): void {
-        let search: string = "q=" + encodeURIComponent(this.search.text) + "&o=" + this.getOrderStr();
-        history.pushState(this.search, "search", "/search?" + search);
+    setLoc(): void {
+        this.router.navigate(["/search"], {
+            queryParams: {
+                q: this.search.text,
+                o: this.getOrderStr()
+            }
+        });
     }
 
     private checkChange(): boolean {
