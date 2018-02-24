@@ -4,6 +4,7 @@
   <a class="faves"
      matTooltip="{{tweet.Faves}} Likes!"
      target="_blank"
+     (mouseup)="trackClick($event, 'like-' + tweet.IdStr)"
      [href]="likeIntentUrl + tweet.IdStr">
     <i class="icon-heart"></i>
     <span [textContent]="tweet.Faves"></span>
@@ -11,11 +12,16 @@
   <a class="rts"
      matTooltip="{{tweet.Rts}} Retweets!"
      target="_blank"
+     (mouseup)="trackClick($event, 'retweet-' + tweet.IdStr)"
      [href]="rtIntentUrl + tweet.IdStr">
     <i class="icon-retweet"></i>
     <span [textContent]="tweet.Rts"></span>
   </a>
-  <a class="link" [href]="tweet.Url" target="_blank" matTooltip="Twitter URL">
+  <a class="link"
+     [href]="tweet.Url"
+     target="_blank"
+     (mouseup)="trackClick($event, 'view-' + tweet.IdStr)"
+     matTooltip="Twitter URL">
     <i class="icon-link"></i>
   </a>
   <a class="internal-link"

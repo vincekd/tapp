@@ -240,6 +240,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Debugf(ctx, "remote: %v", r.RemoteAddr)
+
 	page := "html/main.html"
 	name := path.Clean(r.URL.Path)
 	if name == "/admin" {
@@ -251,6 +253,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	mainPage := MainPage{
 		User: user,
 		GaKey: MyToken.GaKey,
+		// disable if localhost or no ga key supplied in credentials
+		HasGaKey: MyToken.GaKey != "" && r.RemoteAddr != "127.0.0.1",
 	}
 
 	if err != nil {

@@ -74,12 +74,12 @@ handlers:
 - url: /robots.txt
   static_files: media/robots.txt
   upload: media/robots.txt
-
-# remove for deployment
-- url: /node_modules
-  static_dir: node_modules
 - url: /dist
   static_dir: dist
+
+# remove for deployment
+# - url: /node_modules
+#   static_dir: node_modules
 
 # error handlers: redirect all other pages to /error 404
 - url: /error

@@ -77,37 +77,29 @@ export class TweetService {
 
 @Injectable()
 export class AnalyticsService {
-    constructor() { }
+    constructor() {
+        if (typeof "ga" !== "function") {
+            console.warn("ganalytics not loaded.");
+        }
+    }
 
-    trackEvent(eventCategory: string, eventAction: string): void {
-        //TODO: track likes/rts/twitter.com views
+    trackEvent(eventCategory: string, event: string, button: string): void {
         if (typeof ga === "function") {
             try {
-                ga('send', 'event', eventCategory, eventAction);
+                ga('send', 'event', eventCategory, event, button);
             } catch (e) {
                 console.error("ga error", e);
             }
-        } else {
-            console.info("ga is undefined");
         }
-
     }
 
     trackPage(page: string): void {
         if (typeof ga === "function") {
             try {
-                //ga('set', 'page', page);
-                //ga('send', 'pageview');
-                //ga('send', 'pageview', page, )
-                ga('send', {
-                    'hitType': 'pageview',
-                    'page': page
-                });
+                ga('send', 'pageview', page);
             } catch (e) {
                 console.error("ga error", e);
             }
-        } else {
-            console.info("ga is undefined");
         }
     }
 }
