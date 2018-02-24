@@ -34,10 +34,10 @@ import { UserService, TweetService } from './app.services'
 import { CapitalizePipe, ReplaceMediaPipe, TweetDatePipe } from './app.pipes'
 
 const appRoutes: Routes = [
-    { path : 'latest', component: LatestComponent },
-    { path : 'best', component: BestComponent },
-    { path : 'search', component: SearchComponent },
-    { path : 'tweet/:id', component: TweetComponent },
+    { path : 'latest', component: LatestComponent, data: { state: 'latest' } },
+    { path : 'best', component: BestComponent, data: { state: 'best' } },
+    { path : 'search', component: SearchComponent, data: { state: 'search' } },
+    { path : 'tweet/:id', component: TweetComponent, data: { state: 'tweet-id' } },
     { path : 'error', component: ErrorPageComponent },
     { path : '', redirectTo: '/best', pathMatch: 'full' }
 ];

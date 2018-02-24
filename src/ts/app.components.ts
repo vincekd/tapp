@@ -12,12 +12,19 @@ import {
 } from "@angular/material";
 import { User, Tweet } from './app.classes';
 import { UserService, TweetService } from './app.services';
+import {
+    //fadeInAnimation
+    routerTransition
+} from './app.animations'
 
 @Component({
     selector: 'twitter-app',
+    animations: [routerTransition],
     template: `
 <header ta-menu="" [user]="user"></header>
-<div id="wrapper"><router-outlet></router-outlet></div>
+<div id="wrapper" [@routerTransition]="getState(o)">
+    <router-outlet #o="outlet"></router-outlet>
+</div>
 `
 })
 export class TwitterAppComponent implements OnInit {
@@ -26,6 +33,9 @@ export class TwitterAppComponent implements OnInit {
     ngOnInit(): void {
         console.info("TwitterAppComponent ngInit");
         this.userServ.getUser().subscribe(u => this.user = u);
+    }
+    getState(outlet): any {
+        return outlet.activatedRouteData.state;
     }
 }
 
@@ -38,7 +48,6 @@ export class MenuComponent {
     constructor() { }
 }
 
-@Component({})
 class TweetsComponent implements OnInit {
     protected tweetServ: TweetService;
     tweets?: Array<Tweet>;
@@ -70,6 +79,8 @@ class TweetsComponent implements OnInit {
 }
 
 @Component({
+    //animations: [fadeInAnimation],
+    //host: {'[@fadeInAnimation]': ''},
     templateUrl: "/templates/tweets.html"
 })
 export class LatestComponent extends TweetsComponent {
@@ -80,6 +91,8 @@ export class LatestComponent extends TweetsComponent {
 }
 
 @Component({
+    //animations: [fadeInAnimation],
+    //host: {'[@fadeInAnimation]': ''},
     templateUrl: "/templates/tweets.html"
 })
 export class BestComponent extends TweetsComponent {
@@ -90,6 +103,8 @@ export class BestComponent extends TweetsComponent {
 }
 
 @Component({
+    //animations: [fadeInAnimation],
+    //host: {'[@fadeInAnimation]': ''},
     templateUrl: "/templates/search.html"
 })
 export class SearchComponent extends TweetsComponent {
@@ -198,6 +213,8 @@ export class SearchComponent extends TweetsComponent {
 }
 
 @Component({
+    //animations: [fadeInAnimation],
+    //host: {'[@fadeInAnimation]': ''},
     template: `
 <div id="single-tweet">
   <div></div>
@@ -248,6 +265,8 @@ export class LoadingSpinnerComponent {
 }
 
 @Component({
+    //animations: [fadeInAnimation],
+    //host: {'[@fadeInAnimation]': ''},
     templateUrl: "/templates/error.html"
 })
 export class ErrorPageComponent {

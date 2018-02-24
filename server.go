@@ -488,13 +488,13 @@ func updateDatastoreTweets(ctx context.Context) (err error) {
 	}
 
 	log.Infof(ctx, "Checking tweets: %v", len(tweets))
+	// Iterate over tweets and fetch from Twitter
+	// Update values
+	// Store
 	tweets, err = checkTweets(ctx, tweets)
 	if err != nil {
 		return err
 	}
-	// Iterate over tweets and fetch from Twitter
-	// Update values
-	// Store
 	log.Infof(ctx, "Looked up tweets: %v", len(tweets))
 
 	return storeTweets(ctx, tweets)
