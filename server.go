@@ -159,16 +159,13 @@ func tweetsHandler(w http.ResponseWriter, r *http.Request) {
 		tweets []MyTweet
 		err error
 	)
+	i, _ := strconv.Atoi(params.Get("page"))
 	if which == "best" {
-		i, _ := strconv.Atoi(params.Get("page"))
-		tweets, err = getBestTweets(ctx, max(1, i))
+		tweets, err = getBestTweets(ctx, i)
 	} else if which == "latest" {
-		i, _ := strconv.Atoi(params.Get("lastId"))
 		tweets, err = getLatestTweets(ctx, i)
 	} else if which == "search" {
-		i, _ := strconv.Atoi(params.Get("page"))
-		search := RemovePunctuation(strings.TrimSpace(params.Get("search")), false)
-		tweets, err = getSearchTweets(ctx, search, params.Get("order"), i)
+		tweets, err = getSearchTweets(ctx, i, params.Get("search"), params.Get("order"))
 	} else {
 		log.Errorf(ctx, "Error invalid tweet type: %v", which)
 		http.Error(w, "Error", http.StatusNotFound)
@@ -374,17 +371,21 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 	return user, nil
 }
 
-func getSearchTweets(ctx context.Context, search string, order string, page int) ([]MyTweet, error) {
+func getSearchTweets(ctx context.Context, page int, search string, order string) ([]MyTweet, error) {
 	var (
 		tweets []MyTweet
 		err error
 	)
 
+	search = RemovePunctuation(strings.TrimSpace(search), false)
 	if len(search) > MIN_SEARCH_LENGTH {
 		terms := getTerms(search)
 
 		if len(terms) > 0 {
-			query := datastore.NewQuery("MyTweet").Filter("Deleted =", false).Order(order)
+			query := datastore.NewQuery("MyTweet").
+				Filter("Deleted =", false).
+				Order(order).
+				Offset(page * TWEETS_TO_FETCH)
 			tweets = []MyTweet{}
 			_, err = query.GetAll(ctx, &tweets)
 			if err != nil {
@@ -393,14 +394,23 @@ func getSearchTweets(ctx context.Context, search string, order string, page int)
 			}
 
 			tweets = searchTweets(tweets, terms)
-			return getPage(tweets, page), nil
+
+			length := len(tweets)
+			if length > 0 {
+				num := page * TWEETS_TO_FETCH
+				if num < length {
+					return tweets[num : min(num + TWEETS_TO_FETCH, length)], nil
+				}
+				return nil, nil
+			}
+			return tweets, nil
 		}
 	}
 
 	return tweets, nil
 }
 
-func getLatestTweets(ctx context.Context, lastId int) ([]MyTweet, error) {
+func getLatestTweets(ctx context.Context, page int) ([]MyTweet, error) {
 	var (
 		tweets []MyTweet
 		err error
@@ -408,11 +418,9 @@ func getLatestTweets(ctx context.Context, lastId int) ([]MyTweet, error) {
 
 	query := datastore.NewQuery("MyTweet").
 		Filter("Deleted =", false).
+		Order("-Id").
 		Limit(TWEETS_TO_FETCH).
-		Order("-Id")
-	if lastId != 0 {
-		query = query.Filter("Id <", lastId)
-	}
+		Offset(page * TWEETS_TO_FETCH)
 
 	tweets = []MyTweet{}
 	_, err = query.GetAll(ctx, &tweets)
@@ -434,7 +442,10 @@ func getBestTweets(ctx context.Context, page int) ([]MyTweet, error) {
 		Filter("Deleted =", false).
 		Order("-Faves").
 		Order("-Rts").
-		Order("-Ratio")
+		Order("-Ratio").
+		Limit(TWEETS_TO_FETCH).
+		Offset(page * TWEETS_TO_FETCH)
+
 	tweets = []MyTweet{}
 	_, err = query.GetAll(ctx, &tweets)
 	if err != nil {
@@ -442,22 +453,7 @@ func getBestTweets(ctx context.Context, page int) ([]MyTweet, error) {
 		return nil, err
 	}
 
-
-	return getPage(tweets, page), err
-}
-
-func getPage(tweets []MyTweet, page int) []MyTweet {
-	length := len(tweets)
-	if length > 0 {
-		if page <= 1 {
-			return tweets[0 : min(TWEETS_TO_FETCH, length)]
-		}
-		if page * TWEETS_TO_FETCH < length {
-			return tweets[(page - 1) * TWEETS_TO_FETCH : min(page * TWEETS_TO_FETCH, length)]
-		}
-		return nil
-	}
-	return tweets
+	return tweets, nil
 }
 
 func fetchAndStoreTweets(ctx context.Context) ([]MyTweet, error) {

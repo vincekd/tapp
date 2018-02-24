@@ -105,10 +105,9 @@ export class SearchComponent extends TweetsComponent {
     };
     sortOpts: Array<object> = [
         {label: "Created", name: "Id" },
-        {label: "Best", name: "Faves"},
-        // {label: "Ratio", name: "Ratio"}
+        {label: "Best", name: "Faves"}
     ];
-    page: number = 1;
+    page: number = 0;
     tweets: Array<Tweet> = [];
 
     constructor(tweetServ: TweetService, private snackBar: MatSnackBar) {
@@ -144,10 +143,10 @@ export class SearchComponent extends TweetsComponent {
         this.tweetServ.searchTweets(this.search.text, this.page.toString(), this.getOrderStr()).then(tweets => {
             if (tweets) {
                 this.tweets.push(...tweets);
-                this.page++;
             } else {
                 this.search.resultsEmpty = true;
             }
+            this.page++;
             this.loading = false;
         }).catch(() => {
             this.loading = false;
@@ -156,14 +155,12 @@ export class SearchComponent extends TweetsComponent {
 
     doSearch(): void {
         if (this.search.text.length <= 2) {
-            //TODO: indicator if search.text is empty or nothing has changed
-            console.log("no change or search is too short");
             this.snackBar.open("Search is too short.", "Dismiss", {duration: 5000});
         } else if (!this.checkChange()) {
             this.snackBar.open("Search parameters haven't changed.", "Dismiss", {duration: 5000});
         } else {
             this.setLoc();
-            this.page = 1;
+            this.page = 0;
             this.tweets = [];
 
             this.search.prev.text = this.search.text;

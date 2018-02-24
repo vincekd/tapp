@@ -29,7 +29,8 @@
                name="search"
                maxlength="280"
                [(ngModel)]="search.text"
-               (keyup.enter)="doSearch()" />
+               (keyup.enter)="doSearch()"
+               autocomplete="off" />
       </div>
       <div>
         <button name="submit"

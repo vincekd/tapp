@@ -26,7 +26,6 @@
         "zone.js": "latest",
         "systemjs": "latest",
         "core-js": "latest",
-        "bignumber.js": "latest",
         "ngx-infinite-scroll": "latest"
     },
     "devDependencies": {
