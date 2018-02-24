@@ -31,7 +31,7 @@ import {
     LoadingSpinnerComponent
 } from './app.components';
 import { UserService, TweetService } from './app.services'
-import { CapitalizePipe, ReplaceMediaPipe } from './app.pipes'
+import { CapitalizePipe, ReplaceMediaPipe, TweetDatePipe } from './app.pipes'
 
 const appRoutes: Routes = [
     { path : 'latest', component: LatestComponent },
@@ -67,7 +67,8 @@ const appRoutes: Routes = [
         LoadingSpinnerComponent,
         ErrorPageComponent,
         CapitalizePipe,
-        ReplaceMediaPipe
+        ReplaceMediaPipe,
+        TweetDatePipe
     ],
     providers: [UserService, TweetService],
     bootstrap: [TwitterAppComponent]

@@ -98,8 +98,8 @@ func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
 				tweets = append(tweets, MyTweet{
 					Id: int64(id),
 					IdStr: row["tweet_id"],
-					Created: makeTimestamp(parseTimestamp(row["timestamp"], ARCHIVE_TIME_FORMAT)),
-					Updated: makeTimestamp(time.Now()),
+					Created: parseTimestamp(row["timestamp"], ARCHIVE_TIME_FORMAT).Unix(),
+					Updated: time.Now().Unix(),
 					Url: TWITTER_URL + MyToken.ScreenName + "/status/" + row["tweet_id"],
 					Deleted: false,
 					Media: nil,
@@ -347,7 +347,7 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 		Name: anacondaUser.Name,
 		ProfileImageUrlHttps: anacondaUser.ProfileImageUrlHttps,
 		Url: TWITTER_URL + anacondaUser.ScreenName,
-		Updated: makeTimestamp(time.Now()),
+		Updated: time.Now().Unix(),
 		Description: anacondaUser.Description,
 		Followers: anacondaUser.FollowersCount,
 		Following: anacondaUser.FriendsCount,
@@ -552,7 +552,7 @@ func checkTweets(ctx context.Context, tweets []MyTweet) ([]MyTweet, error) {
 				t.Text = aTweet.FullText
 			}
 		}
-		t.Updated = makeTimestamp(time.Now())
+		t.Updated = time.Now().Unix()
 
 		if testTweet(aTweet) {
 			out = append(out, t)
@@ -662,8 +662,8 @@ func processTweets(tweets []anaconda.Tweet) ([]MyTweet, int64) {
 				Faves: tweet.FavoriteCount,
 				Rts: tweet.RetweetCount,
 				Id: tweet.Id,
-				Created: makeTimestamp(parseTimestamp(tweet.CreatedAt, SEARCH_TIME_FORMAT)),
-				Updated: makeTimestamp(time.Now()),
+				Created: parseTimestamp(tweet.CreatedAt, SEARCH_TIME_FORMAT).Unix(),
+				Updated: time.Now().Unix(),
 				Text: tweet.FullText,
 				Url: TWITTER_URL + MyToken.ScreenName + "/status/" + tweet.IdStr,
 				Deleted: false,
@@ -763,15 +763,11 @@ func getRatio(favs int, rts int) float32 {
 }
 
 func parseTimestamp(str string, format string) time.Time {
-	created, err := time.Parse(format, str)
+	stamp, err := time.Parse(format, str)
 	if err != nil {
-		created = time.Time{}
+		stamp = time.Time{}
 	}
-	return created
-}
-
-func makeTimestamp(t time.Time) int64 {
-	return t.Unix()
+	return stamp
 }
 
 func min(num1 int, num2 int) int {

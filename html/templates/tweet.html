@@ -1,4 +1,4 @@
-<div class="tweet-date" [textContent]="tweet.Created*1000 | date:'MMM d, y, h:mm a'"></div>
+<div class="tweet-date" [textContent]="tweet | TweetDate"></div>
 <div class="tweet-text" [innerHTML]="tweet | ReplaceMedia"></div>
 <div class="tweet-metadata">
   <a class="faves"

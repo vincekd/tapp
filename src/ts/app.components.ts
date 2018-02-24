@@ -68,6 +68,7 @@ class TweetsComponent implements OnInit {
         this.addTweets();
     }
 }
+
 @Component({
     templateUrl: "/templates/tweets.html"
 })
@@ -77,6 +78,7 @@ export class LatestComponent extends TweetsComponent {
         this.name = "latest";
     }
 }
+
 @Component({
     templateUrl: "/templates/tweets.html"
 })
@@ -86,6 +88,7 @@ export class BestComponent extends TweetsComponent {
         this.name = "best";
     }
 }
+
 @Component({
     templateUrl: "/templates/search.html"
 })
@@ -108,7 +111,8 @@ export class SearchComponent extends TweetsComponent {
     page: number = 0;
     tweets: Array<Tweet> = [];
 
-    constructor(tweetServ: TweetService, private snackBar: MatSnackBar, private router: Router, private activeRoute: ActivatedRoute) {
+    constructor(tweetServ: TweetService, private snackBar: MatSnackBar,
+                private router: Router, private activeRoute: ActivatedRoute) {
         super(tweetServ)
         this.name = "search";
     }
