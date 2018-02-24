@@ -5,6 +5,7 @@ import ('rxjs/add/operator/map');
 
 import { User, Tweet } from './app.classes';
 
+declare let ga: any;
 
 @Injectable()
 export class UserService {
@@ -71,5 +72,42 @@ export class TweetService {
         }).toPromise().then(resp => {
             return <Array<Tweet>>resp;
         });
+    }
+}
+
+@Injectable()
+export class AnalyticsService {
+    constructor() { }
+
+    trackEvent(eventCategory: string, eventAction: string): void {
+        //TODO: track likes/rts/twitter.com views
+        if (typeof ga === "function") {
+            try {
+                ga('send', 'event', eventCategory, eventAction);
+            } catch (e) {
+                console.error("ga error", e);
+            }
+        } else {
+            console.info("ga is undefined");
+        }
+
+    }
+
+    trackPage(page: string): void {
+        if (typeof ga === "function") {
+            try {
+                //ga('set', 'page', page);
+                //ga('send', 'pageview');
+                //ga('send', 'pageview', page, )
+                ga('send', {
+                    'hitType': 'pageview',
+                    'page': page
+                });
+            } catch (e) {
+                console.error("ga error", e);
+            }
+        } else {
+            console.info("ga is undefined");
+        }
     }
 }

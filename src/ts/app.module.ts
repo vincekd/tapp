@@ -30,7 +30,7 @@ import {
     TweetFragComponent,
     LoadingSpinnerComponent
 } from './app.components';
-import { UserService, TweetService } from './app.services'
+import { UserService, TweetService, AnalyticsService } from './app.services'
 import { CapitalizePipe, ReplaceMediaPipe, TweetDatePipe } from './app.pipes'
 
 const appRoutes: Routes = [
@@ -70,7 +70,7 @@ const appRoutes: Routes = [
         ReplaceMediaPipe,
         TweetDatePipe
     ],
-    providers: [UserService, TweetService],
+    providers: [UserService, TweetService, AnalyticsService],
     bootstrap: [TwitterAppComponent]
 })
 export class AppModule { }

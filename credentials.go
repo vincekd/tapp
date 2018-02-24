@@ -15,6 +15,7 @@ type Credentials struct {
 	ConsumerKey string `json:"consumerKey"`
 	ConsumerKeySecret string `json:"consumerKeySecret"`
 	ScreenName string `json:"screenName"`
+	GaKey string `json:"gaTrackingId"`
 }
 
 func LoadCredentials() (api *anaconda.TwitterApi, token Credentials) {

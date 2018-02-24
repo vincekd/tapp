@@ -248,6 +248,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	var temp *template.Template
 	temp, err = template.ParseFiles(page)
+	mainPage := MainPage{
+		User: user,
+		GaKey: MyToken.GaKey,
+	}
 
 	if err != nil {
 		log.Errorf(ctx, "Error parsing template: %v", err)
@@ -255,7 +259,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	temp.Execute(w, user)
+	temp.Execute(w, mainPage)
 }
 
 func updateUserHandler(w http.ResponseWriter, r *http.Request) {

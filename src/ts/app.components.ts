@@ -5,13 +5,14 @@ import {
 } from '@angular/core';
 import {
     ActivatedRoute,
-    Router
+    Router,
+    NavigationEnd
 } from '@angular/router';
 import {
     MatSnackBar
 } from "@angular/material";
 import { User, Tweet } from './app.classes';
-import { UserService, TweetService } from './app.services';
+import { UserService, TweetService, AnalyticsService } from './app.services';
 import {
     //fadeInAnimation
     routerTransition
@@ -29,10 +30,17 @@ import {
 })
 export class TwitterAppComponent implements OnInit {
     user?: User;
-    constructor(private userServ: UserService) { }
+    constructor(private userServ: UserService, private analServ: AnalyticsService, private router: Router) { }
     ngOnInit(): void {
         console.info("TwitterAppComponent ngInit");
         this.userServ.getUser().subscribe(u => this.user = u);
+        this.router.events.subscribe((e: any) => {
+            if (e instanceof NavigationEnd) {
+                if (e.url) {
+                    this.analServ.trackPage(e.url);
+                }
+            }
+        });
     }
     getState(outlet): any {
         return outlet.activatedRouteData.state;
