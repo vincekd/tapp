@@ -60,10 +60,7 @@ class TweetsComponent implements OnInit {
     }
 
     addTweets(): void {
-        this.loading = true;
-        this.tweetServ.addTweets(this.name).
-            then(() => this.loading = false).
-            catch(() => this.loading = false);
+        this.tweetServ.addTweets(this.name);
     }
 
     onScroll(): void {
