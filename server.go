@@ -387,6 +387,7 @@ func getSearchTweets(ctx context.Context, page int, search string, order string)
 	search = RemovePunctuation(strings.TrimSpace(search), false)
 	if len(search) > MIN_SEARCH_LENGTH {
 		terms := getTerms(search)
+		//log.Debugf(ctx, "terms: %v", terms)
 
 		if len(terms) > 0 {
 			query := datastore.NewQuery("MyTweet").
@@ -758,12 +759,19 @@ func searchTweets(tweets []MyTweet, terms [][]SearchTerm) (ret []MyTweet) {
 
 func RemovePunctuation(text string, quotes bool) string {
 	var reg *regexp.Regexp
+	// other replacements?
+	text = strings.Replace(text, "'", "", -1)
+	text = strings.Replace(text, "&", " and ", -1)
+	text = strings.Replace(text, "%", " percent ", -1)
 	if quotes == true {
-		reg, _ = regexp.Compile("[^a-zA-Z0-9 ]")
+		reg, _ = regexp.Compile("[^a-zA-Z0-9#@ ]")
 	} else {
-		reg, _ = regexp.Compile("[^a-zA-Z0-9 \"]")
+		reg, _ = regexp.Compile("[^a-zA-Z0-9#@ \"]")
 	}
-	return reg.ReplaceAllString(text, "")
+
+	text = reg.ReplaceAllString(text, " ")
+	reg, _ = regexp.Compile(" +")
+	return reg.ReplaceAllString(text, " ")
 }
 
 func testTweet(tweet anaconda.Tweet) bool {
