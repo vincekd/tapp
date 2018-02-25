@@ -55,14 +55,7 @@ func init() {
 	http.HandleFunc("/admin", indexHandler)
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
 
-	// service worker
-	http.HandleFunc("/service-worker.js", serviceWorkerHandler)
-
 	TwitterApi, MyToken = LoadCredentials()
-}
-
-func serviceWorkerHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "dist/js/service-worker.js")
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {

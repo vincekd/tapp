@@ -50,11 +50,6 @@ handlers:
   script: _go_app
   secure: always
 
-# service worker
-- url: /service-worker.js
-  script: _go_app
-  secure: always
-
 # admin handlers
 - url: /admin
   script: _go_app
@@ -82,11 +77,19 @@ handlers:
 - url: /media
   static_dir: media
   secure: always
+- url: /dist
+  static_dir: dist
+
+# robots
 - url: /robots.txt
   static_files: media/robots.txt
   upload: media/robots.txt
-- url: /dist
-  static_dir: dist
+
+# service worker
+- url: /service-worker.js
+  static_files: dist/js/service-worker.js
+  secure: always
+  upload: dist/js/service-worker.js
 
 # remove for deployment
 # - url: /node_modules
