@@ -100,8 +100,8 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 		XMLName xml.Name `xml:"channel"`
 		Title string `xml:"title"`
 		Link string `xml:"link"`
-		Language string `xml: "language"`
-		Copyright string `xml: "copyright"`
+		Language string `xml:"language"`
+		Copyright string `xml:"copyright"`
 		Image Image
 		XmlTweets []XmlTweet
 	}
