@@ -113,20 +113,25 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 	xmlTweets := make([]XmlTweet, len(tweets))
 	for i, tweet := range tweets {
+		t := time.Unix(tweet.Created, 0).Format(XML_RSS_TIME_FORMAT)
 		xmlTweets[i] = XmlTweet{
-			Title: "New Tweet",
+			Title: t + " Tweet",
 			Link: tweet.Url,
 			Guid: tweet.Url,
-			PubDate: time.Unix(tweet.Created, 0).Format(XML_RSS_TIME_FORMAT),
+			PubDate: t,
 			Description: tweet.Text,
 		}
 	}
 
 	now := time.Now().Format("2006")
 	user, _ := getUser(ctx)
+	url := r.URL.String()
+	if r.URL.IsAbs() == true {
+		url = r.Host + url
+	}
 
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
-	w.Write([]byte(`<?xml version="1" encoding="UTF-8"?>` + "\n"))
+	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n"))
 
 	var encoder *xml.Encoder = xml.NewEncoder(w)
 	encoder.Indent("", "  ")
@@ -136,13 +141,13 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 		Channel: Channel{
 			XmlTweets: xmlTweets,
 			Title: "@" + user.ScreenName + " Latest Tweets",
-			Link: r.Host + r.URL.String(),
+			Link: url,
 			Language: "en-US",
 			Copyright: "Copyright " + now + " @" + user.ScreenName,
 			Image: Image{
 				Title: user.ScreenName + " Tweets",
 				Url: user.ProfileImageUrlHttps,
-				Link: r.Host + r.URL.String(),
+				Link: url,
 			},
 		},
 	})
