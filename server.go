@@ -61,8 +61,7 @@ func init() {
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	reader := csv.NewReader(r.Body)
-	// user, _ := getUser(ctx)
-	// userIdStr := fmt.Sprintf("%v", user.Id)
+
 	records, err := reader.ReadAll()
 	if err != nil {
 		log.Errorf(ctx, "Error parsing csv file: %v", err)
