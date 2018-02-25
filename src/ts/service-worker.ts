@@ -1,12 +1,12 @@
 
-const VERSION = "v0.0.5";
+const VERSION = "v0.0.8";
 const RESOURCE_CACHE = "tapp.resources." + VERSION;
 const USER_CACHE = "tapp.user." + VERSION;
 const TWEET_CACHE = "tapp.tweets." + VERSION;
 const CACHE_WHITELIST = [RESOURCE_CACHE, USER_CACHE, TWEET_CACHE];
 const USER_URL = "/user";
-const TWEET_REGEXP = /\/tweets\/(?:best|latest)(?:\\?.*){0,1}$/i;
-
+//, "/tweets/search"
+const TWEET_URLS = ["/tweets/best", "/tweets/latest"];
 const CACHED_RESOURCES = [
     // CSS
     "/media/twitter-fontello/css/tweet-icons.css",
@@ -21,14 +21,15 @@ const CACHED_RESOURCES = [
     "/templates/tweet.html",
     "/templates/error.html",
     // MISC
-    "/media/twitter-fontello/font/tweet-icons.woff2?27142445",
-    // "/media/twitter-fontello/font/tweet-icons.eot?27142445",
-    // "/media/twitter-fontello/font/tweet-icons.eot?27142445#iefix",
-    // "/media/twitter-fontello/font/tweet-icons.woff?27142445",
-    // "/media/twitter-fontello/font/tweet-icons.ttf?27142445",
-    // "/media/twitter-fontello/font/tweet-icons.svg?27142445#tweet-icons",
+    "/media/twitter-fontello/font/tweet-icons.woff2",
+];
+const suffixes = [
     ".jpg",
     ".png",
+    ".eot",
+    ".ttf",
+    ".svg",
+    ".woff",
 ];
 
 // self.addEventListener("message", function() {
@@ -39,11 +40,13 @@ self.addEventListener("error", function(err) {
 });
 
 self.addEventListener("fetch", function(event: any) {
-    const isResource = CACHED_RESOURCES.some(r => event.request.url.endsWith(r));
-    const isUser = event.request.url.endsWith(USER_URL);
-    const isTweets = TWEET_REGEXP.test(event.request.url);
+    const url = new URL(event.request.url);
+    const isResource = (CACHED_RESOURCES.indexOf(url.pathname) > -1 ||
+                        suffixes.some(s => url.pathname.endsWith(s)));
+    const isUser = url.pathname === USER_URL;
+    const isTweets = TWEET_URLS.indexOf(url.pathname) > -1;
     if (isResource || isUser || isTweets) {
-        event.respondWith(caches.match(event.request).then(resp => {
+        event.respondWith(caches.match(event.request, {ignoreSearch: isResource}).then(resp => {
             if (isResource) {
                 return resp || fetch(event.request).then(resp => {
                     return caches.open(RESOURCE_CACHE).then(cache => {
@@ -85,7 +88,7 @@ self.addEventListener("install", function(event: any) {
     console.log("installing service worker");
     event.waitUntil(
         Promise.all([
-            caches.open(RESOURCE_CACHE).then(cache => cache.addAll(CACHED_RESOURCES.filter(r => r.startsWith("/")))),
+            caches.open(RESOURCE_CACHE).then(cache => cache.addAll(CACHED_RESOURCES)),
             caches.open(USER_CACHE).then(cache => cache.addAll([USER_URL])),
         ])
     );
