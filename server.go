@@ -15,6 +15,7 @@ import (
 	"html/template"
 	"encoding/json"
 	"encoding/csv"
+	"encoding/xml"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 	"google.golang.org/appengine/log"
@@ -56,7 +57,82 @@ func init() {
 	http.HandleFunc("/admin", indexHandler)
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
 
+	// rss feed
+	http.HandleFunc("/xml/rss/tweets/latest", rssFeedHandler)
+	http.HandleFunc("/xml/rss/tweets/best", rssFeedHandler)
+
 	TwitterApi, MyToken = LoadCredentials()
+}
+
+func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	var (
+		tweets []MyTweet
+		err error
+	)
+	which := strings.Replace(path.Clean(r.URL.Path), "/xml/rss/tweets/", "", 1)
+	if which == "latest" {
+		tweets, err = getLatestTweets(ctx, 0)
+	} else {
+		tweets, err = getBestTweets(ctx, 0)
+	}
+	if err != nil {
+		log.Errorf(ctx, "Error getting latest tweets: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
+	type XmlTweet struct {
+		XMLName xml.Name `xml:"item"`
+		Title string `xml:"title"`
+		Link string `xml:"link"`
+		Guid string `xml:"guid"`
+		PubDate string `xml:"pubDate"`
+		Description string `xml:"description"`
+	}
+	type Channel struct {
+		XMLName xml.Name `xml:"channel"`
+		Title string `xml:"title"`
+		Link string `xml:"link"`
+		Language string `xml: "language"`
+		Copyright string `xml: "copyright"`
+		XmlTweets []XmlTweet
+	}
+	type Headers struct {
+		XMLName xml.Name `xml:"rss"`
+		Version string `xml:"version,attr"`
+		Channel Channel
+	}
+
+	xmlTweets := make([]XmlTweet, len(tweets))
+	for i, tweet := range tweets {
+		xmlTweets[i] = XmlTweet{
+			Title: "New Tweet",
+			Link: tweet.Url,
+			Guid: tweet.Url,
+			PubDate: time.Unix(tweet.Created, 0).Format(XML_RSS_TIME_FORMAT),
+			Description: tweet.Text,
+		}
+	}
+
+	now := time.Now().Format("2006")
+	user, _ := getUser(ctx)
+
+	w.Write([]byte(`<?xml version="1" encoding="UTF-8"?>` + "\n"))
+
+	var encoder *xml.Encoder = xml.NewEncoder(w)
+	encoder.Indent("", "  ")
+
+	encoder.Encode(Headers{
+		Version: "2.0",
+		Channel: Channel{
+			XmlTweets: xmlTweets,
+			Title: "@" + user.ScreenName + " Latest Tweets",
+			Link: r.Host + r.URL.String(),
+			Language: "en-US",
+			Copyright: "Copyright " + now + " @" + user.ScreenName,
+		},
+	})
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
