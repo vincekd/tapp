@@ -41,8 +41,10 @@ func init() {
 
 	// ajax calls
 	http.HandleFunc("/user", userHandler)
-	http.HandleFunc("/tweets", tweetsHandler)
 	http.HandleFunc("/tweet", tweetHandler)
+	http.HandleFunc("/tweets/latest", tweetsHandler)
+	http.HandleFunc("/tweets/best", tweetsHandler)
+	http.HandleFunc("/tweets/search", tweetsHandler)
 
 	// cron requests
 	http.HandleFunc("/fetch", fetchTweetsHandler)
@@ -53,8 +55,14 @@ func init() {
 	http.HandleFunc("/admin", indexHandler)
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
 
+	// service worker
+	http.HandleFunc("/service-worker.js", serviceWorkerHandler)
 
 	TwitterApi, MyToken = LoadCredentials()
+}
+
+func serviceWorkerHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "dist/js/service-worker.js")
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,19 +162,21 @@ func tweetHandler(w http.ResponseWriter, r *http.Request) {
 func tweetsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	params := r.URL.Query()
-	which := params.Get("type")
 	var (
 		tweets []MyTweet
 		err error
 	)
+
 	i, _ := strconv.Atoi(params.Get("page"))
-	if which == "best" {
+	which := strings.Replace(path.Clean(r.URL.Path), "/tweets/", "", 1)
+	switch which {
+	case "best":
 		tweets, err = getBestTweets(ctx, i)
-	} else if which == "latest" {
+	case "latest":
 		tweets, err = getLatestTweets(ctx, i)
-	} else if which == "search" {
+	case "search":
 		tweets, err = getSearchTweets(ctx, i, params.Get("search"), params.Get("order"))
-	} else {
+	default:
 		log.Errorf(ctx, "Error invalid tweet type: %v", which)
 		http.Error(w, "Error", http.StatusNotFound)
 		return
@@ -231,7 +241,6 @@ func indexOrErrorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	// http.ServeFile(w, r, "html/admin.html")
 	ctx := appengine.NewContext(r)
 	user, err := getUser(ctx)
 	if err != nil {
@@ -239,8 +248,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}
-
-	log.Debugf(ctx, "remote: %v", r.RemoteAddr)
 
 	page := "html/main.html"
 	name := path.Clean(r.URL.Path)
@@ -254,7 +261,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		User: user,
 		GaKey: MyToken.GaKey,
 		// disable if localhost or no ga key supplied in credentials
-		HasGaKey: MyToken.GaKey != "" && r.RemoteAddr != "127.0.0.1",
+		HasGaKey: MyToken.GaKey != "" && isLocalhost(r.RemoteAddr) == false,
 	}
 
 	if err != nil {
@@ -784,4 +791,8 @@ func min(num1 int, num2 int) int {
 
 func max(num1 int, num2 int) int {
 	return int(math.Max(float64(num1), float64(num2)))
+}
+
+func isLocalhost(addr string) bool {
+	return addr == "127.0.0.1" || addr == "::1"
 }

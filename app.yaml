@@ -23,7 +23,13 @@ handlers:
 - url: /user
   script: _go_app
   secure: always
-- url: /tweets
+- url: /tweets/latest
+  script: _go_app
+  secure: always
+- url: /tweets/best
+  script: _go_app
+  secure: always
+- url: /tweets/search
   script: _go_app
   secure: always
 - url: /tweet/[0-9]+
@@ -41,6 +47,11 @@ handlers:
   script: _go_app
   secure: always
 - url: /fetch
+  script: _go_app
+  secure: always
+
+# service worker
+- url: /service-worker.js
   script: _go_app
   secure: always
 

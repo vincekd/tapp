@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script>
+     if ('serviceWorker' in navigator) {
+         try {
+             navigator.serviceWorker.register("/service-worker.js").then(sw => {
+                 console.log("service worker registered", sw);
+                 sw.update();
+             }).catch(e => {
+                 console.error("Error registering service worker", e);
+             });
+         } catch (e) {
+             console.error("error registering service worker", e);
+         }
+     }
+    </script>
+    
     {{if .HasGaKey }}
     <script>
      try {

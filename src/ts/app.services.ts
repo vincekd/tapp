@@ -67,11 +67,15 @@ export class TweetService {
     }
 
     get(which: string, page: string, search: string = '', order: string = '') {
-        return this.http.get("/tweets", {
-            params: {'type': which, 'page': page, 'search': search, 'order': order}
-        }).toPromise().then(resp => {
-            return <Array<Tweet>>resp;
-        });
+        let params = {
+            page: page
+        };
+        if (which === "search") {
+            params["search"] = search;
+            params["order"] = order;
+        }
+        return this.http.get("/tweets/" + which, { params: params }).
+            toPromise().then(resp => <Array<Tweet>>resp);
     }
 }
 
