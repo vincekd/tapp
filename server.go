@@ -702,30 +702,40 @@ func getMedia(tweet *anaconda.Tweet) (media []Media) {
 
 func getTerms(search string) (terms [][]SearchTerm) {
 	// ORs[] of ANDs[]
-	ors := strings.Split(search, " OR ")
+	quoted := []string{}
+	reg, _ := regexp.Compile("\"[^\"]*\"")
+	//TODO: unpaired quotes
+	newStr := reg.ReplaceAllStringFunc(search, func(quote string) string {
+		quote = strings.Trim(quote, "\"")
+		if len(quote) > MIN_SEARCH_LENGTH {
+			quoted = append(quoted, quote)
+			return "$$"
+		}
+		return ""
+	})
+	ors := strings.Split(newStr, " OR ")
 	for _, or := range ors {
 		split := strings.Fields(or)
 		o := []SearchTerm{}
 		for _, term := range split {
-			if len(term) > MIN_SEARCH_LENGTH {
-				// make all uppercase
-				var (
-					quoted bool = false
-					reg *regexp.Regexp = nil
-					str string = term
-				)
-				if strings.HasPrefix(term, "\"") == true && strings.HasSuffix(term, "\"") == true {
-					quoted = true
-					runes := []rune(term)
-					str = string(runes[1 : len(term) - 1])
-					reg, _ = regexp.Compile("(^| )" + strings.ToUpper(str) + "( |$)")
-				}
+			if term == "$$" {
+				// unshift from quoted slice
+				str := quoted[0]
+				quoted = quoted[1:]
+				reg, _ = regexp.Compile("(^| )" + strings.ToUpper(str) + "( |$)")
 				o = append(o, SearchTerm{
-					Original: term,
 					Text: str,
 					Upper: strings.ToUpper(str),
-					Quoted: quoted,
+					Quoted: true,
 					RegExp: reg,
+				})
+			} else if len(term) > MIN_SEARCH_LENGTH {
+				term = RemovePunctuation(term, true)
+				o = append(o, SearchTerm{
+					Text: term,
+					Upper: strings.ToUpper(term),
+					Quoted: false,
+					RegExp: nil,
 				})
 			}
 		}
