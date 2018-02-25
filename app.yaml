@@ -65,10 +65,10 @@ handlers:
   login: admin
 
 # rss handlers
-- url: /xml/rss/tweets/latest
+- url: /xml/rss/tweets/latest.xml
   script: _go_app
   secure: always
-- url: /xml/rss/tweets/best
+- url: /xml/rss/tweets/best.xml
   script: _go_app
   secure: always
 

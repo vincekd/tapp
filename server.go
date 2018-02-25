@@ -58,8 +58,8 @@ func init() {
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
 
 	// rss feed
-	http.HandleFunc("/xml/rss/tweets/latest", rssFeedHandler)
-	http.HandleFunc("/xml/rss/tweets/best", rssFeedHandler)
+	http.HandleFunc("/xml/rss/tweets/latest.xml", rssFeedHandler)
+	http.HandleFunc("/xml/rss/tweets/best.xml", rssFeedHandler)
 
 	TwitterApi, MyToken = LoadCredentials()
 }
@@ -90,12 +90,19 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 		PubDate string `xml:"pubDate"`
 		Description string `xml:"description"`
 	}
+	type Image struct {
+		XMLName xml.Name `xml:"image"`
+		Title string `xml:"title"`
+		Url string `xml:"url"`
+		Link string `xml:"link"`
+	}
 	type Channel struct {
 		XMLName xml.Name `xml:"channel"`
 		Title string `xml:"title"`
 		Link string `xml:"link"`
 		Language string `xml: "language"`
 		Copyright string `xml: "copyright"`
+		Image Image
 		XmlTweets []XmlTweet
 	}
 	type Headers struct {
@@ -118,6 +125,7 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().Format("2006")
 	user, _ := getUser(ctx)
 
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.Write([]byte(`<?xml version="1" encoding="UTF-8"?>` + "\n"))
 
 	var encoder *xml.Encoder = xml.NewEncoder(w)
@@ -131,8 +139,14 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 			Link: r.Host + r.URL.String(),
 			Language: "en-US",
 			Copyright: "Copyright " + now + " @" + user.ScreenName,
+			Image: Image{
+				Title: user.ScreenName + " Tweets",
+				Url: user.ProfileImageUrlHttps,
+				Link: r.Host + r.URL.String(),
+			},
 		},
 	})
+	encoder.Flush()
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
