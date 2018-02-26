@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
-import ('rxjs/add/operator/map');
+//import { Observable } from 'rxjs/Observable';
+//import ('rxjs/add/operator/map');
 
 import { User, Tweet } from './app.classes';
 
@@ -9,27 +9,26 @@ declare let ga: any;
 
 @Injectable()
 export class UserService {
+    private user: Promise<User>;
     constructor(private http: HttpClient) {
         this.user = this.get();
     }
-    private user: Observable<User>;
 
-    get(): Observable<User> {
-        return this.http.get("/user").map(res => <User>res);
+    private get(): Promise<User> {
+        return this.http.get("/user").toPromise().then(res => <User>res);
     }
-    getUser(): Observable<User> {
+    getUser(): Promise<User> {
         return this.user;
     }
 }
 
 @Injectable()
 export class TweetService {
-    constructor(private http: HttpClient) { }
-
     latestPage: number = 0;
     bestPage: number = 0;
     latest: Array<Tweet> = [];
     best: Array<Tweet> = [];
+    constructor(private http: HttpClient) { }
 
     getTweet(id: string): Promise<Tweet> {
         return this.http.get("/tweet", {

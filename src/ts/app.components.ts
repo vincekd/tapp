@@ -33,7 +33,7 @@ export class TwitterAppComponent implements OnInit {
     constructor(private userServ: UserService, private analServ: AnalyticsService, private router: Router) { }
     ngOnInit(): void {
         console.info("TwitterAppComponent ngInit");
-        this.userServ.getUser().subscribe(u => this.user = u);
+        this.userServ.getUser().then(u => this.user = u);
         this.router.events.subscribe((e: any) => {
             if (e instanceof NavigationEnd) {
                 if (e.url) {
@@ -257,7 +257,12 @@ export class TweetComponent implements OnInit {
 export class TweetFragComponent {
     likeIntentUrl: string = "https://twitter.com/intent/like?tweet_id="
     rtIntentUrl: string = "https://twitter.com/intent/retweet?tweet_id="
-    constructor(private analServ: AnalyticsService) { }
+    favstarUrl: string = "https://favstar.fm/users/" + '@' + "/status/"
+    constructor(private analServ: AnalyticsService, userServ: UserService) {
+        userServ.getUser().then(u => {
+            this.favstarUrl = "https://favstar.fm/users/" + u.ScreenName + "/status/"
+        });
+    }
     @Input("tweet") tweet?: Tweet;
     @Input("showInternalLink") showInternalLink?: boolean;
 

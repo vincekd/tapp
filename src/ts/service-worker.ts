@@ -1,5 +1,5 @@
 
-const VERSION = "v0.0.8";
+const VERSION = "v0.0.9"
 const RESOURCE_CACHE = "tapp.resources." + VERSION;
 const USER_CACHE = "tapp.user." + VERSION;
 const TWEET_CACHE = "tapp.tweets." + VERSION;

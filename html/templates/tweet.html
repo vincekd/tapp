@@ -1,33 +1,46 @@
 <div class="tweet-date" [textContent]="tweet | TweetDate"></div>
-<div class="tweet-text" [innerHTML]="tweet | ReplaceMedia"></div>
-<div class="tweet-metadata">
-  <a class="faves"
-     matTooltip="{{tweet.Faves}} Likes!"
-     target="_blank"
-     (mouseup)="trackClick($event, 'like-' + tweet.IdStr)"
-     [href]="likeIntentUrl + tweet.IdStr">
-    <i class="icon-heart"></i>
-    <span [textContent]="tweet.Faves"></span>
-  </a>
-  <a class="rts"
-     matTooltip="{{tweet.Rts}} Retweets!"
-     target="_blank"
-     (mouseup)="trackClick($event, 'retweet-' + tweet.IdStr)"
-     [href]="rtIntentUrl + tweet.IdStr">
-    <i class="icon-retweet"></i>
-    <span [textContent]="tweet.Rts"></span>
-  </a>
-  <a class="link"
-     [href]="tweet.Url"
-     target="_blank"
-     (mouseup)="trackClick($event, 'view-' + tweet.IdStr)"
-     matTooltip="Twitter URL">
-    <i class="icon-link"></i>
-  </a>
-  <a class="internal-link"
-     routerLink="/tweet/{{ tweet.IdStr }}"
+<div class="internal-link">
+  <a routerLink="/tweet/{{ tweet.IdStr }}"
      *ngIf="showInternalLink"
      matTooltip="View Tweet">
     <i class="icon-bookmark"></i>
   </a>
+</div>
+<div class="tweet-text" [innerHTML]="tweet | ReplaceMedia"></div>
+<div class="tweet-metadata">
+  <div class="tweet-stats">
+    <a class="faves"
+       matTooltip="{{tweet.Faves}} Likes!"
+       target="_blank"
+       (mouseup)="trackClick($event, 'like-' + tweet.IdStr)"
+       [href]="likeIntentUrl + tweet.IdStr">
+      <i class="icon-heart"></i>
+      <span [textContent]="tweet.Faves"></span>
+    </a>
+    <a class="rts"
+       matTooltip="{{tweet.Rts}} Retweets!"
+       target="_blank"
+       (mouseup)="trackClick($event, 'retweet-' + tweet.IdStr)"
+       [href]="rtIntentUrl + tweet.IdStr">
+      <i class="icon-retweet"></i>
+      <span [textContent]="tweet.Rts"></span>
+    </a>
+  </div>
+
+  <div class="external-links">
+    <a class="favstar"
+       matTooltip="View on Favstar"
+       target="_blank"
+       (mouseup)="trackClick($event, 'favstar-' + tweet.IdStr)"
+       [href]="favstarUrl + tweet.IdStr">
+      <i class="icon-star"></i>
+    </a>
+    <a class="link"
+       [href]="tweet.Url"
+       target="_blank"
+       (mouseup)="trackClick($event, 'view-' + tweet.IdStr)"
+       matTooltip="Twitter URL">
+      <i class="icon-link"></i>
+    </a>
+  </div>
 </div>

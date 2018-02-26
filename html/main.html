@@ -2,7 +2,7 @@
 <html>
   <head>
     <script>
-     if ('serviceWorker' in navigator) {
+     if (location.host.split(":")[0] !== 'localhost' && 'serviceWorker' in navigator) {
          try {
              navigator.serviceWorker.register("/service-worker.js").then(sw => {
                  console.log("service worker registered", sw);

@@ -23,6 +23,13 @@ $scrollbar-offset: 15.5px;
   top: 50%;
   transform: translateY(-50%);
 }
+@mixin tweet-links() {
+  text-decoration: none;
+  cursor: pointer;
+  color: $menu-color;
+  &:active,
+  &:hover { color: #555; }
+}
 @mixin tweet() {
   $padding: 10px;
   $margin: 15px;
@@ -51,8 +58,19 @@ $scrollbar-offset: 15.5px;
       width: 100%;
     }
   }
+  .internal-link {
+    position: absolute;
+    right: 5px;
+    top: 10px;
+    min-width: auto;
+    a {
+      @include tweet-links();
+    }
+  }
   .tweet-metadata {
-    > * {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    a {
       display: inline-block;
       position: relative;
       min-width: 51px;
@@ -62,12 +80,15 @@ $scrollbar-offset: 15.5px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      cursor: pointer;
       padding-bottom: 2px;
-      color: $menu-color;
-      text-decoration: none;
-      &:active,
-      &:hover { color: #555; }
+      @include tweet-links();
+    }
+    .external-links {
+      text-align: right;
+      a {
+        min-width: auto;
+        margin-left: 15px;
+      }
     }
     i {
       font-size: 16px;
@@ -80,22 +101,10 @@ $scrollbar-offset: 15.5px;
       font-weight: bold;
     }
     .faves {
-      //i { color: $fave-color; }
       span { left: -11px; }
     }
     .rts {
-      //i { color: $rt-color; }
       span { left: -8px; }
-    }
-    .link,
-    .internal-link {
-      padding: 0;
-    }
-    .internal-link {
-      position: absolute;
-      right: 5px;
-      top: 10px;
-      min-width: auto;
     }
   }
 }
@@ -109,7 +118,10 @@ $scrollbar-offset: 15.5px;
   display: inline-block;
   font-size: 34px;
 }
-
+.clear {
+  content: " ";
+  clear: both;
+}
 /* styles */
 html,
 body {
