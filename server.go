@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"context"
 	"path"
+	"bytes"
 	//"errors"
 	"net/http"
 	"net/url"
@@ -131,16 +132,10 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().Format("2006")
 	user, _ := getUser(ctx)
 	url := r.URL.String()
-	// if r.URL.IsAbs() == true {
-	// 	url = r.Host + url
-	// }
+	buf := &bytes.Buffer{}
+	encoder := xml.NewEncoder(buf)
 
-	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
-	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n"))
-
-	var encoder *xml.Encoder = xml.NewEncoder(w)
 	encoder.Indent("", "  ")
-
 	encoder.Encode(Headers{
 		Version: "2.0",
 		Channel: Channel{
@@ -157,6 +152,10 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	encoder.Flush()
+
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n"))
+	w.Write(bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("\n"), -1))
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
