@@ -71,11 +71,16 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 		err error
 	)
 	which := strings.Replace(path.Clean(r.URL.Path), "/xml/rss/tweets/", "", 1)
-	if which == "latest" {
+	if which == "latest.xml" {
 		tweets, err = getLatestTweets(ctx, 0)
-	} else {
+	} else if which == "best.xml" {
 		tweets, err = getBestTweets(ctx, 0)
+	} else {
+		log.Errorf(ctx, "Rss feed: %v not found: %v", which, err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
 	}
+
 	if err != nil {
 		log.Errorf(ctx, "Error getting latest tweets: %v", err)
 		http.Error(w, "Error", http.StatusInternalServerError)
@@ -126,9 +131,9 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().Format("2006")
 	user, _ := getUser(ctx)
 	url := r.URL.String()
-	if r.URL.IsAbs() == true {
-		url = r.Host + url
-	}
+	// if r.URL.IsAbs() == true {
+	// 	url = r.Host + url
+	// }
 
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n"))
