@@ -110,18 +110,7 @@ $scrollbar-offset: 15.5px;
 }
 
 /* extra */
-@keyframes spinner {
-  to { transform: rotate(360deg); }
-}
-.loading-spinner {
-  animation: spinner 1s linear infinite;
-  display: inline-block;
-  font-size: 34px;
-}
-.clear {
-  content: " ";
-  clear: both;
-}
+
 /* styles */
 html,
 body {
@@ -385,6 +374,10 @@ header {
   > div {
     @include vertical-align();
     top: calc(50% - #{$header-height});
+  }
+  svg path,
+  svg rect{
+    fill: $menu-color;
   }
 }
 
