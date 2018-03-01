@@ -89,73 +89,61 @@ func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type XmlTweet struct {
-		XMLName xml.Name `xml:"item"`
+		XMLName xml.Name `xml:"entry"`
 		Title string `xml:"title"`
 		Link string `xml:"link"`
-		Guid string `xml:"guid"`
-		PubDate string `xml:"pubDate"`
-		Description string `xml:"description"`
+		Id string `xml:"id"`
+		Updated string `xml:"updated"`
+		Summary string `xml:"summary"`
+		Content string `xml:"content"`
+		Author string `xml:"author>name"`
 	}
-	type Image struct {
-		XMLName xml.Name `xml:"image"`
-		Title string `xml:"title"`
-		Url string `xml:"url"`
-		Link string `xml:"link"`
-	}
-	type Channel struct {
-		XMLName xml.Name `xml:"channel"`
-		Title string `xml:"title"`
-		Link string `xml:"link"`
-		Language string `xml:"language"`
-		Copyright string `xml:"copyright"`
-		Image Image
-		XmlTweets []XmlTweet
-	}
-	type Headers struct {
-		XMLName xml.Name `xml:"rss"`
-		Version string `xml:"version,attr"`
-		Channel Channel
-	}
+
+	user, _ := getUser(ctx)
+	last, _ := getLatestTweet(ctx)
 
 	xmlTweets := make([]XmlTweet, len(tweets))
 	for i, tweet := range tweets {
-		t := time.Unix(tweet.Created, 0).Format(XML_RSS_TIME_FORMAT)
+		t := time.Unix(tweet.Created, 0).Format(XML_ATOM_TIME_FORMAT)
 		xmlTweets[i] = XmlTweet{
 			Title: t + " Tweet",
 			Link: tweet.Url,
-			Guid: tweet.Url,
-			PubDate: t,
-			Description: tweet.Text,
+			Id: tweet.IdStr,
+			Updated: t,
+			Summary: tweet.Text[:min(len(tweet.Text), SUMMARY_LENGTH)],
+			Content: tweet.Text,
+			Author: "@" + user.ScreenName,
 		}
 	}
 
-	now := time.Now().Format("2006")
-	user, _ := getUser(ctx)
 	url := r.URL.String()
 	buf := &bytes.Buffer{}
 	encoder := xml.NewEncoder(buf)
 
 	encoder.Indent("", "  ")
-	encoder.Encode(Headers{
-		Version: "2.0",
-		Channel: Channel{
-			XmlTweets: xmlTweets,
-			Title: "@" + user.ScreenName + " Latest Tweets",
-			Link: url,
-			Language: "en-US",
-			Copyright: "Copyright " + now + " @" + user.ScreenName,
-			Image: Image{
-				Title: user.ScreenName + " Tweets",
-				Url: user.ProfileImageUrlHttps,
-				Link: url,
-			},
-		},
+	encoder.Encode(struct {
+		XMLName xml.Name `xml:"feed"`
+		Xmlns string `xml:"xmlns,attr"`
+		Title string `xml:"title"`
+		SubTitle string `xml:"subtitle"`
+		Link string `xml:"link"`
+		Updated string `xml:"updated"`
+		Id string `xml:"id"`
+		XmlTweets []XmlTweet
+	} {
+		Xmlns: "http://www.w3.org/2005/Atom",
+		Title: "@" + user.ScreenName + " Latest Tweets Feed",
+		Link: url,
+		Updated: time.Unix(last.Updated, 0).Format(XML_ATOM_TIME_FORMAT),
+		Id: url,
+		XmlTweets: xmlTweets,
 	})
 	encoder.Flush()
 
-	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.Header().Set("Content-Type", "application/atom+xml; charset=utf-8")
 	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n"))
-	w.Write(bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("\n"), -1))
+	w.Write(bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("<br/>\n"), -1))
+	//w.Write(buf.Bytes())
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
