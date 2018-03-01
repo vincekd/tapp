@@ -49,7 +49,8 @@ export class TweetService {
     }
 
     public addTweets(which: string): Promise<Tweet[]> {
-        return this.get(which, this[which + "Page"].toString()).then(data => {
+        const page: number = (which === "latest" ? this.latestPage : this.bestPage);
+        return this.get(which, page.toString()).then(data => {
             if (data) {
                 if (which === "latest") {
                     this.latestPage++;
@@ -67,7 +68,7 @@ export class TweetService {
     }
 
     public get(which: string, page: string, search: string = '', order: string = '') {
-        const params = {page};
+        const params: any = {page};
         if (which === "search") {
             params.search = search;
             params.order = order;
