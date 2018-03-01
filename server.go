@@ -349,7 +349,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	var temp *template.Template
 	temp, err = template.ParseFiles(page)
-	mainPage := MainPage{
+	mainPage := struct {
+		User *User
+		GaKey string
+		HasGaKey bool
+	} {
 		User: user,
 		GaKey: MyToken.GaKey,
 		// disable if localhost or no ga key supplied in credentials
@@ -362,7 +366,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	temp.Execute(w, mainPage)
+	err = temp.Execute(w, mainPage)
+	if err != nil {
+		log.Errorf(ctx, "Error executing template: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func updateUserHandler(w http.ResponseWriter, r *http.Request) {

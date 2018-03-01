@@ -1,7 +1,7 @@
 import {
     Component,
     Input,
-    OnInit
+    OnInit,
 } from '@angular/core';
 import {
     ActivatedRoute,
@@ -15,7 +15,7 @@ import { User, Tweet } from './app.classes';
 import { UserService, TweetService, AnalyticsService } from './app.services';
 import {
     routerTransition
-} from './app.animations'
+} from './app.animations';
 
 @Component({
     selector: 'twitter-app',
@@ -25,12 +25,12 @@ import {
 <div id="wrapper" [@routerTransition]="getState(o)">
     <router-outlet #o="outlet"></router-outlet>
 </div>
-`
+`,
 })
 export class TwitterAppComponent implements OnInit {
-    user?: User;
+    public user?: User;
     constructor(private userServ: UserService, private analServ: AnalyticsService, private router: Router) { }
-    ngOnInit(): void {
+    public ngOnInit(): void {
         console.info("TwitterAppComponent ngInit");
         this.userServ.getUser().then(u => this.user = u);
         this.router.events.subscribe((e: any) => {
@@ -41,7 +41,7 @@ export class TwitterAppComponent implements OnInit {
             }
         });
     }
-    getState(outlet): any {
+    public getState(outlet): any {
         return outlet.activatedRouteData.state;
     }
 }
@@ -51,23 +51,25 @@ export class TwitterAppComponent implements OnInit {
     templateUrl: "/templates/menu.html"
 })
 export class MenuComponent {
-    @Input() user?: User;
-    constructor() { }
+    @Input()
+    public user?: User;
+    //constructor() { }
 }
 
 class TweetsComponent implements OnInit {
+    public tweets?: Tweet[];
+    public name: string = "best";
+    public scrollDistance: number = 2;
+    public scrollThrottle: number = 300;
+    public loading: boolean = false;
+
     protected tweetServ: TweetService;
-    tweets?: Array<Tweet>;
-    name: string = "best";
-    scrollDistance: number = 2;
-    scrollThrottle: number = 300;
-    loading: boolean = false;
 
     constructor(tweetServ: TweetService) {
         this.tweetServ = tweetServ;
     }
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
         console.info("loading tweets:", this.name);
         this.loading = true;
         this.tweetServ.getTweets(this.name).then(tweets => {
@@ -76,11 +78,11 @@ class TweetsComponent implements OnInit {
         }).catch(() => this.loading = false);
     }
 
-    addTweets(): void {
+    public addTweets(): void {
         this.tweetServ.addTweets(this.name);
     }
 
-    onScroll(): void {
+    public onScroll(): void {
         this.addTweets();
     }
 }
@@ -90,7 +92,7 @@ class TweetsComponent implements OnInit {
 })
 export class LatestComponent extends TweetsComponent {
     constructor(tweetServ: TweetService) {
-        super(tweetServ)
+        super(tweetServ);
         this.name = "latest";
     }
 }
@@ -100,7 +102,7 @@ export class LatestComponent extends TweetsComponent {
 })
 export class BestComponent extends TweetsComponent {
     constructor(tweetServ: TweetService) {
-        super(tweetServ)
+        super(tweetServ);
         this.name = "best";
     }
 }
@@ -109,33 +111,33 @@ export class BestComponent extends TweetsComponent {
     templateUrl: "/templates/search.html"
 })
 export class SearchComponent extends TweetsComponent {
-    search = {
-        "text": "",
-        "prev": {
-            "text": "",
-            "order": "",
-            "ascending": false
+    public search = {
+        text: "",
+        prev: {
+            text: "",
+            order: "",
+            ascending: false
         },
-        "order": "Faves",
-        "ascending": false,
-        "resultsEmpty": false
+        order: "Faves",
+        ascending: false,
+        resultsEmpty: false
     };
-    sortOpts: Array<object> = [
+    public sortOpts: object[] = [
         {label: "Created", name: "Id" },
         {label: "Best", name: "Faves"}
     ];
-    page: number = 0;
-    tweets: Array<Tweet> = [];
+    public page: number = 0;
+    public tweets: Tweet[] = [];
 
     constructor(tweetServ: TweetService, private snackBar: MatSnackBar,
                 private router: Router, private activeRoute: ActivatedRoute) {
-        super(tweetServ)
+        super(tweetServ);
         this.name = "search";
     }
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
         this.activeRoute.queryParamMap.subscribe(params => {
-            let split: any = {
+            const split: any = {
                 q: decodeURIComponent(params.get("q") || ""),
                 o: params.get("o")
             };
@@ -154,11 +156,11 @@ export class SearchComponent extends TweetsComponent {
         });
     }
 
-    toggleSortOrder(): void {
+    public toggleSortOrder(): void {
         this.search.ascending = !this.search.ascending;
     }
 
-    addTweets(): void {
+    public addTweets(): void {
         this.tweetServ.searchTweets(this.search.text, this.page.toString(), this.getOrderStr()).then(tweets => {
             if (tweets) {
                 this.tweets.push(...tweets);
@@ -172,7 +174,7 @@ export class SearchComponent extends TweetsComponent {
         }); //finally not supported
     }
 
-    doSearch(): void {
+    public doSearch(): void {
         if (this.search.text.length <= 2) {
             this.snackBar.open("Search is too short.", "Dismiss", {duration: 5000});
         } else if (!this.checkChange()) {
@@ -193,17 +195,17 @@ export class SearchComponent extends TweetsComponent {
         }
     }
 
-    private getOrderStr(): string {
-        return (this.search.ascending ? "" : "-") + this.search.order;
-    }
-
-    setLoc(): void {
+    public setLoc(): void {
         this.router.navigate(["/search"], {
             queryParams: {
                 q: this.search.text,
                 o: this.getOrderStr()
             }
         });
+    }
+
+    private getOrderStr(): string {
+        return (this.search.ascending ? "" : "-") + this.search.order;
     }
 
     private checkChange(): boolean {
@@ -226,12 +228,12 @@ export class SearchComponent extends TweetsComponent {
 })
 export class TweetComponent implements OnInit {
     //id?: string
-    tweet?: Tweet
+    public tweet?: Tweet;
     constructor(private tweetServ: TweetService, private route: ActivatedRoute) { }
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
         this.route.params.subscribe(params => {
-            let id: string = params['id'];
+            const id: string = params.id;
             if (id) {
                 this.tweetServ.getTweet(id).then(tweet => {
                     this.tweet = tweet;
@@ -246,18 +248,22 @@ export class TweetComponent implements OnInit {
     templateUrl: "/templates/tweet.html"
 })
 export class TweetFragComponent {
-    likeIntentUrl: string = "https://twitter.com/intent/like?tweet_id="
-    rtIntentUrl: string = "https://twitter.com/intent/retweet?tweet_id="
-    favstarUrl: string = "https://favstar.fm/users/" + '@' + "/status/"
+    public likeIntentUrl: string = "https://twitter.com/intent/like?tweet_id=";
+    public rtIntentUrl: string = "https://twitter.com/intent/retweet?tweet_id=";
+    public favstarUrl: string = "https://favstar.fm/users/" + '@' + "/status/";
+
+    @Input("tweet")
+    public tweet?: Tweet;
+    @Input("showInternalLink")
+    public showInternalLink?: boolean;
+
     constructor(private analServ: AnalyticsService, userServ: UserService) {
         userServ.getUser().then(u => {
-            this.favstarUrl = "https://favstar.fm/users/" + u.ScreenName + "/status/"
+            this.favstarUrl = "https://favstar.fm/users/" + u.ScreenName + "/status/";
         });
     }
-    @Input("tweet") tweet?: Tweet;
-    @Input("showInternalLink") showInternalLink?: boolean;
 
-    trackClick(event: MouseEvent, which: string): void {
+    public trackClick(event: MouseEvent, which: string): void {
         this.analServ.trackEvent('click-external-link', which, 'button-' + event.button);
     }
 }
@@ -280,15 +286,15 @@ export class TweetFragComponent {
       </path>
     </svg>
   </div>
-</div>`
+</div>`,
 })
 export class LoadingSpinnerComponent {
-    constructor() { }
+    //constructor() { }
 }
 
 @Component({
-    templateUrl: "/templates/error.html"
+    templateUrl: "/templates/error.html",
 })
 export class ErrorPageComponent {
-    constructor() { }
+    //constructor() { }
 }

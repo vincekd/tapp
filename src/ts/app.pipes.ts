@@ -3,23 +3,23 @@ import { Tweet } from "./app.classes";
 import { DatePipe } from '@angular/common';
 
 @Pipe({
-    "name": "Capitalize"
+    name: "Capitalize"
 })
 export class CapitalizePipe implements PipeTransform {
-    transform(str: string): string {
+    public transform(str: string): string {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }
 
 @Pipe({
-    "name": "ReplaceMedia"
+    name: "ReplaceMedia"
 })
 export class ReplaceMediaPipe implements PipeTransform {
-    transform(tweet: Tweet): string {
+    public transform(tweet: Tweet): string {
         if (tweet.Media) {
             let text = tweet.Text;
             tweet.Media.forEach(m => {
-                text = text.replace(m.Url, `<img src="${m.MediaUrl}" />`)
+                text = text.replace(m.Url, `<img src="${m.MediaUrl}" />`);
             });
             return text;
         }
@@ -28,16 +28,16 @@ export class ReplaceMediaPipe implements PipeTransform {
 }
 
 @Pipe({
-    "name": "TweetDate"
+    name: "TweetDate"
 })
 export class TweetDatePipe implements PipeTransform {
-    private datePipe: DatePipe
+    private datePipe: DatePipe;
     constructor() {
-        this.datePipe = new DatePipe(this.getLang())
+        this.datePipe = new DatePipe(this.getLang());
     }
 
-    transform(tweet: Tweet): string {
-        return this.datePipe.transform(new Date(tweet.Created*1000), 'MMM d, y, h:mm a') || '';
+    public transform(tweet: Tweet): string {
+        return this.datePipe.transform(new Date(tweet.Created * 1000), 'MMM d, y, h:mm a') || '';
     }
 
     private getLang(): string {

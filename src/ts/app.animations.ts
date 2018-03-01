@@ -5,14 +5,14 @@ import {
     animate,
     transition,
     style
-} from "@angular/animations"
+} from "@angular/animations";
 
-let ltr: any = [
+const ltr: any = [
     query(':enter, :leave', style({
         position: 'fixed',
-        width:'100%',
+        width: '100%',
         height: '100%',
-        'overflow': 'hidden'
+        overflow: 'hidden'
     }), { optional: true }),
     query('#tweet-area ', style({ overflow: 'hidden' }), {optional: true}),
     group([
@@ -25,11 +25,11 @@ let ltr: any = [
             animate('0.5s ease-in-out', style({ transform: 'translateX(-100%)' })),
         ], { optional: true })
     ])
-],
-rtl: any = [
+];
+const rtl: any = [
     query(':enter, :leave', style({
         position: 'fixed',
-        width:'100%',
+        width: '100%',
         height: '100%',
     }), { optional: true }),
     query('#tweet-area ', style({ overflow: 'hidden' }), {optional: true}),

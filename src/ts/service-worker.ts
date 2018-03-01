@@ -1,5 +1,5 @@
 
-const VERSION = "v0.0.9"
+const VERSION = "v0.1.0";
 const RESOURCE_CACHE = "tapp.resources." + VERSION;
 const USER_CACHE = "tapp.user." + VERSION;
 const TWEET_CACHE = "tapp.tweets." + VERSION;
@@ -35,11 +35,11 @@ const suffixes = [
 // self.addEventListener("message", function() {
 //     console.log("message", arguments);
 // });
-self.addEventListener("error", function(err) {
+self.addEventListener("error", err => {
     console.error("Error in service worker", err);
 });
 
-self.addEventListener("fetch", function(event: any) {
+self.addEventListener("fetch", (event: any) => {
     const url = new URL(event.request.url);
     const isResource = (CACHED_RESOURCES.indexOf(url.pathname) > -1 ||
                         suffixes.some(s => url.pathname.endsWith(s)));
@@ -56,7 +56,7 @@ self.addEventListener("fetch", function(event: any) {
                 });
             } else {
                 // eventually fresh
-                let req = fetch(event.request).then(resp => {
+                const req = fetch(event.request).then(resp => {
                     return caches.open(isUser ? USER_CACHE : TWEET_CACHE).then(cache => {
                         cache.put(event.request, resp.clone());
                         return resp;
@@ -69,13 +69,13 @@ self.addEventListener("fetch", function(event: any) {
     }
 });
 
-self.addEventListener("activate", function(event: any) {
+self.addEventListener("activate", (event: any) => {
     console.info("activating service worker");
     event.waitUntil(
         caches.keys().then(
             keyList => Promise.all(keyList.map(key => {
                 if (CACHE_WHITELIST.indexOf(key) < 0) {
-                    console.log("deleting cache", key);
+                    console.info("deleting cache", key);
                     return caches.delete(key);
                 }
                 return true;
@@ -84,8 +84,8 @@ self.addEventListener("activate", function(event: any) {
     );
 });
 
-self.addEventListener("install", function(event: any) {
-    console.log("installing service worker");
+self.addEventListener("install", (event: any) => {
+    console.info("installing service worker");
     event.waitUntil(
         Promise.all([
             caches.open(RESOURCE_CACHE).then(cache => cache.addAll(CACHED_RESOURCES)),

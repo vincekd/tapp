@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-//import { Observable } from 'rxjs/Observable';
-//import ('rxjs/add/operator/map');
 
 import { User, Tweet } from './app.classes';
 
@@ -14,31 +12,34 @@ export class UserService {
         this.user = this.get();
     }
 
-    private get(): Promise<User> {
-        return this.http.get("/user").toPromise().then(res => <User>res);
-    }
-    getUser(): Promise<User> {
+    public getUser(): Promise<User> {
         return this.user;
     }
+
+    private get(): Promise<User> {
+        return this.http.get("/user").toPromise().then(res => res as User);
+    }
+
 }
 
 @Injectable()
 export class TweetService {
-    latestPage: number = 0;
-    bestPage: number = 0;
-    latest: Array<Tweet> = [];
-    best: Array<Tweet> = [];
+    public latest: Tweet[] = [];
+    public best: Tweet[] = [];
+    private latestPage: number = 0;
+    private bestPage: number = 0;
+
     constructor(private http: HttpClient) { }
 
-    getTweet(id: string): Promise<Tweet> {
+    public getTweet(id: string): Promise<Tweet> {
         return this.http.get("/tweet", {
-            params: {"id": id}
+            params: {id}
         }).toPromise().then(resp => {
-            return <Tweet>resp;
+            return resp as Tweet;
         });
     }
 
-    getTweets(which: string): Promise<Array<Tweet>> {
+    public getTweets(which: string): Promise<Tweet[]> {
         if (this[which].length === 0) {
             return this.addTweets(which).then(() => {
                 return this[which];
@@ -47,7 +48,7 @@ export class TweetService {
         return Promise.all([this[which]]).then(d => d[0]);
     }
 
-    addTweets(which: string): Promise<Array<Tweet>> {
+    public addTweets(which: string): Promise<Tweet[]> {
         return this.get(which, this[which + "Page"].toString()).then(data => {
             if (data) {
                 if (which === "latest") {
@@ -61,20 +62,18 @@ export class TweetService {
         });
     }
 
-    searchTweets(search: string, page: string, order: string): Promise<Array<Tweet>> {
+    public searchTweets(search: string, page: string, order: string): Promise<Tweet[]> {
         return this.get("search", page, search, order);
     }
 
-    get(which: string, page: string, search: string = '', order: string = '') {
-        let params = {
-            page: page
-        };
+    public get(which: string, page: string, search: string = '', order: string = '') {
+        const params = {page};
         if (which === "search") {
-            params["search"] = search;
-            params["order"] = order;
+            params.search = search;
+            params.order = order;
         }
-        return this.http.get("/tweets/" + which, { params: params }).
-            toPromise().then(resp => <Array<Tweet>>resp);
+        return this.http.get("/tweets/" + which, {params}).
+            toPromise().then(resp => resp as Tweet[]);
     }
 }
 
@@ -86,7 +85,7 @@ export class AnalyticsService {
         }
     }
 
-    trackEvent(eventCategory: string, event: string, button: string): void {
+    public trackEvent(eventCategory: string, event: string, button: string): void {
         if (typeof ga === "function") {
             try {
                 ga('send', 'event', eventCategory, event, button);
@@ -96,7 +95,7 @@ export class AnalyticsService {
         }
     }
 
-    trackPage(page: string): void {
+    public trackPage(page: string): void {
         if (typeof ga === "function") {
             try {
                 ga('send', 'pageview', page);
