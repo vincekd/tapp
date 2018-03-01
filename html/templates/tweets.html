@@ -7,7 +7,12 @@
      (scrolled)="onScroll()">
   <div></div>
   <div id="tweets">
-    <h1>{{ name | Capitalize }} Tweets</h1>
+    <h1>
+      <span>{{ name | Capitalize }} Tweets</span>
+      <a *ngIf="name === 'latest'" id="feed-link" target="_blank" href="/feed/latest.xml">
+        <i class="icon-rss"></i>
+      </a>
+    </h1>
     <div class="tweet" *ngFor="let tweet of tweets" tweet-frag="" [tweet]="tweet" [showInternalLink]="true"></div>
   </div>
   <div loading-spinner="" *ngIf="loading"></div>

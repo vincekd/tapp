@@ -64,13 +64,13 @@ handlers:
   secure: always
   login: admin
 
-# rss handlers
-- url: /xml/rss/tweets/latest.xml
+# feed handlers
+- url: /feed/latest.xml
   script: _go_app
   secure: always
-- url: /xml/rss/tweets/best.xml
-  script: _go_app
-  secure: always
+# - url: /xml/rss/tweets/best.xml
+#   script: _go_app
+#   secure: always
 
 # static dirs
 - url: /css

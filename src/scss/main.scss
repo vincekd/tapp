@@ -237,6 +237,12 @@ header {
       h1 {
         text-align: center;
         font-size: 26px;
+        #feed-link {
+          @include tweet-links();
+          padding: 8px;
+          font-size: 18px;
+          float: right;
+        }
       }
       .tweet {
         @include tweet();
@@ -352,6 +358,10 @@ header {
       #tweets {
         h1 {
           font-size: 18px;
+          #feed-link {
+            font-size: 16px;
+            padding: 1px 8px;
+          }
         }
         .tweet {
           .tweet-text {

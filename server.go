@@ -59,29 +59,14 @@ func init() {
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
 
 	// rss feed
-	http.HandleFunc("/xml/rss/tweets/latest.xml", rssFeedHandler)
-	http.HandleFunc("/xml/rss/tweets/best.xml", rssFeedHandler)
+	http.HandleFunc("/feed/latest.xml", feedHandler)
 
 	TwitterApi, MyToken = LoadCredentials()
 }
 
-func rssFeedHandler(w http.ResponseWriter, r *http.Request) {
+func feedHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	var (
-		tweets []MyTweet
-		err error
-	)
-	which := strings.Replace(path.Clean(r.URL.Path), "/xml/rss/tweets/", "", 1)
-	if which == "latest.xml" {
-		tweets, err = getLatestTweets(ctx, 0)
-	} else if which == "best.xml" {
-		tweets, err = getBestTweets(ctx, 0)
-	} else {
-		log.Errorf(ctx, "Rss feed: %v not found: %v", which, err)
-		http.Error(w, "Error", http.StatusInternalServerError)
-		return
-	}
-
+	tweets, err := getLatestTweets(ctx, 0)
 	if err != nil {
 		log.Errorf(ctx, "Error getting latest tweets: %v", err)
 		http.Error(w, "Error", http.StatusInternalServerError)
