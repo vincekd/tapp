@@ -49,6 +49,9 @@ handlers:
 - url: /fetch
   script: _go_app
   secure: always
+- url: /unretweet
+  script: _go_app
+  secure: always
 
 # admin handlers
 - url: /admin

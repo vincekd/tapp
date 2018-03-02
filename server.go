@@ -53,6 +53,7 @@ func init() {
 	http.HandleFunc("/fetch", fetchTweetsHandler)
 	http.HandleFunc("/update/tweets", updateTweetsHandler)
 	http.HandleFunc("/update/user", updateUserHandler)
+	http.HandleFunc("/unretweet", unretweetHanlder)
 
 	// admin page requests
 	http.HandleFunc("/admin", indexHandler)
@@ -61,7 +62,7 @@ func init() {
 	// rss feed
 	http.HandleFunc("/feed/latest.xml", feedHandler)
 
-	TwitterApi, MyToken = LoadCredentials()
+	TwitterApi, MyToken = LoadCredentials(false)
 }
 
 func feedHandler(w http.ResponseWriter, r *http.Request) {
@@ -344,6 +345,73 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Errorf(ctx, "Error executing template: %v", err)
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
+	}
+}
+
+func unretweetHanlder(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	isCron := r.Header.Get("X-Appengine-Cron")
+
+	if isCron == "true" {
+		twitterApi, myToken := LoadCredentials(true)
+		twitterApi.HttpClient.Transport = &urlfetch.Transport{Context: ctx}
+		tweets := []anaconda.Tweet{}
+		vals := url.Values{
+			"screen_name": {myToken.ScreenName},
+			"count": {"200"},
+			"trim_user": {"1"},
+			"exclude_replies": {"1"},
+			"include_rts": {"1"},
+		}
+		lastId := int64(0)
+		before := time.Now().Unix() - (DAYS_BEFORE_UNRETWEET * SECONDS_IN_DAY)
+		log.Infof(ctx, "unretweet tweets before: %v", time.Unix(before, 0))
+
+		for {
+			idStr := fmt.Sprintf("%v", lastId - 1)
+			if idStr == vals.Get("max_id") {
+				log.Warningf(ctx, "same last id: %v", idStr)
+				break
+			}
+			if lastId != 0 {
+				vals.Set("max_id", idStr)
+			}
+			aTweets, err := twitterApi.GetUserTimeline(vals)
+			if err != nil {
+				log.Errorf(ctx, "Error getting tweets: %v", err)
+				http.Error(w, "Error", http.StatusInternalServerError)
+				return
+			}
+
+			log.Infof(ctx, "Got tweets, %v", len(aTweets))
+			if len(aTweets) == 0 {
+				break
+			} else {
+				for _, tweet := range aTweets {
+					if lastId == 0 || tweet.Id < lastId {
+						lastId = tweet.Id
+					}
+
+					time := parseTimestamp(tweet.CreatedAt, SEARCH_TIME_FORMAT)
+					if tweet.RetweetedStatus != nil && time.Unix() < before {
+						tweets = append(tweets, tweet)
+					}
+				}
+			}
+		}
+
+		log.Infof(ctx, "tweets to unretweet: %v", len(tweets))
+		for _, tweet := range tweets {
+			_, err := twitterApi.UnRetweet(tweet.Id, true)
+			if err != nil {
+				log.Errorf(ctx, "Error unretweeting: %v", err)
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+	} else {
+		log.Warningf(ctx, "unauthorized attempt to access cron /unretweet")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	}
 }
 

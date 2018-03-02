@@ -18,7 +18,7 @@ type Credentials struct {
 	GaKey string `json:"gaTrackingId"`
 }
 
-func LoadCredentials() (api *anaconda.TwitterApi, token Credentials) {
+func LoadCredentials(access bool) (api *anaconda.TwitterApi, token Credentials) {
 	credentials, err := ioutil.ReadFile("credentials")
 	if err != nil {
 		os.Exit(1)
@@ -31,8 +31,11 @@ func LoadCredentials() (api *anaconda.TwitterApi, token Credentials) {
 
 	anaconda.SetConsumerKey(token.ConsumerKey)
 	anaconda.SetConsumerSecret(token.ConsumerKeySecret)
-	//api = anaconda.NewTwitterApi(token.AccessToken, token.AccessTokenSecret)
-	api = anaconda.NewTwitterApi("", "")
+	if access == true {
+		api = anaconda.NewTwitterApi(token.AccessToken, token.AccessTokenSecret)
+	} else {
+		api = anaconda.NewTwitterApi("", "")
+	}
 
 	return api, token
 }
