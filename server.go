@@ -85,8 +85,20 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 		Author string `xml:"author>name"`
 	}
 
-	user, _ := getUser(ctx)
-	last, _ := getLatestTweet(ctx)
+	var user *User
+	var last *MyTweet
+	user, err = getUser(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Error getting user: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+	last, err = getLatestTweet(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Error getting latest tweet: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
 
 	xmlTweets := make([]XmlTweet, len(tweets))
 	for i, tweet := range tweets {
@@ -97,7 +109,8 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 			Id: tweet.IdStr,
 			Updated: t,
 			Summary: tweet.Text[:min(len(tweet.Text), SUMMARY_LENGTH)],
-			Content: tweet.Text,
+			//Content: "<![CDATA[ " + strings.Replace(tweet.Text, "\n", "\n<br/>", -1) + " ]]>",
+			Content: "<![CDATA[ " + tweet.Text + " ]]>",
 			Author: "@" + user.ScreenName,
 		}
 	}
@@ -128,8 +141,12 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/atom+xml; charset=utf-8")
 	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n"))
-	w.Write(bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("<br/>\n"), -1))
+	var b []byte = bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("<br/>\n"), -1)
+	b = bytes.Replace(b, []byte("&lt;"), []byte("<"), -1)
+	b = bytes.Replace(b, []byte("&gt;"), []byte(">"), -1)
+	//w.Write(bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("<br/>\n"), -1))
 	//w.Write(buf.Bytes())
+	w.Write(b)
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
