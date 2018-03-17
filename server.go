@@ -74,10 +74,14 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	type Link struct {
+		Href string `xml:"href,attr"`
+		Type string `xml:"rel,attr"`
+	}
 	type XmlTweet struct {
 		XMLName xml.Name `xml:"entry"`
 		Title string `xml:"title"`
-		Link string `xml:"link"`
+		Link Link `xml:"link"`
 		Id string `xml:"id"`
 		Updated string `xml:"updated"`
 		Summary string `xml:"summary"`
@@ -102,12 +106,12 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 
 	xmlTweets := make([]XmlTweet, len(tweets))
 	for i, tweet := range tweets {
-		t := time.Unix(tweet.Created, 0).Format(XML_ATOM_TIME_FORMAT)
+		t := time.Unix(tweet.Created, 0)
 		xmlTweets[i] = XmlTweet{
-			Title: t + " Tweet",
-			Link: tweet.Url,
+			Title: t.Format(FEED_HEADER_FORMAT) + " Tweet",
+			Link: Link{tweet.Url, "alternate"},
 			Id: tweet.IdStr,
-			Updated: t,
+			Updated: t.Format(XML_ATOM_TIME_FORMAT),
 			Summary: tweet.Text[:min(len(tweet.Text), SUMMARY_LENGTH)],
 			//Content: "<![CDATA[ " + strings.Replace(tweet.Text, "\n", "\n<br/>", -1) + " ]]>",
 			Content: "<![CDATA[ " + tweet.Text + " ]]>",
@@ -117,6 +121,7 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 
 	url := r.URL.String()
 	buf := &bytes.Buffer{}
+	year := time.Now().Format("2006")
 	encoder := xml.NewEncoder(buf)
 
 	encoder.Indent("", "  ")
@@ -125,16 +130,22 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 		Xmlns string `xml:"xmlns,attr"`
 		Title string `xml:"title"`
 		SubTitle string `xml:"subtitle"`
-		Link string `xml:"link"`
+		Link Link `xml:"link"`
 		Updated string `xml:"updated"`
 		Id string `xml:"id"`
+		Icon string `xml:"icon"`
+		Logo string `xml:"logo"`
+		Rights string `xml:"rights"`
 		XmlTweets []XmlTweet
 	} {
 		Xmlns: "http://www.w3.org/2005/Atom",
 		Title: "@" + user.ScreenName + " Latest Tweets Feed",
-		Link: url,
+		Link: Link{url, "self"},
 		Updated: time.Unix(last.Updated, 0).Format(XML_ATOM_TIME_FORMAT),
 		Id: url,
+		Icon: user.ProfileImageUrlHttps,
+		Logo: user.ProfileImageUrlHttps,
+		Rights: "© " + year + " "+ user.ScreenName,
 		XmlTweets: xmlTweets,
 	})
 	encoder.Flush()
