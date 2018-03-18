@@ -58,6 +58,7 @@ func init() {
 	// admin page requests
 	http.HandleFunc("/admin", indexHandler)
 	http.HandleFunc("/admin/archive/import", archiveImportHandler)
+	http.HandleFunc("/admin/archive/export", archiveExportHandler)
 
 	// rss feed
 	http.HandleFunc("/feed/latest.xml", feedHandler)
@@ -158,6 +159,73 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 	//w.Write(bytes.Replace(buf.Bytes(), []byte("&#xA;"), []byte("<br/>\n"), -1))
 	//w.Write(buf.Bytes())
 	w.Write(b)
+}
+
+func archiveExportHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	query := datastore.NewQuery("MyTweet").Order("Created")
+	tweets := []MyTweet{}
+	_, err := query.GetAll(ctx, &tweets)
+
+	if err != nil {
+		log.Errorf(ctx, "Error fetching tweets: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := getUser(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Error fetching user: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Add to csv file
+	headers := []string{
+		"id",
+		"created",
+		"favorites",
+		"retweets",
+		"ratio",
+		"text",
+		"url",
+		"deleted",
+	}
+	//rows := [i][len(headers)]string{}
+	rows := make([][]string, len(tweets))
+	for i, tweet := range tweets {
+		rows[i] = []string{
+			tweet.IdStr,
+			time.Unix(tweet.Created, 0).Format(ARCHIVE_TIME_FORMAT),
+			fmt.Sprintf("%v", tweet.Faves),
+			fmt.Sprintf("%v", tweet.Rts),
+			fmt.Sprintf("%v", tweet.Ratio),
+			tweet.Text,
+			tweet.Url,
+			fmt.Sprintf("%v", tweet.Deleted),
+		}
+	}
+
+	w.Header().Set("content-disposition", "attachment; filename=\"" + user.ScreenName + "-tweets.csv\"")
+
+	writer := csv.NewWriter(w)
+	err = writer.Write(headers)
+	if err != nil {
+		log.Errorf(ctx, "Error writing headers: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = writer.WriteAll(rows)
+	if err != nil {
+		log.Errorf(ctx, "Error writing rows: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
+	writer.Flush()
+	//w.WriteHeader(http.StatusOK)
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {

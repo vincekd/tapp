@@ -6,8 +6,8 @@
 
     <base href="/" />
 
-    <title>{{ .ScreenName }}</title>
-    <link rel="icon" type="image/png" id="icon-png" href="{{ .ProfileImageUrlHttps }}" />
+    <title>{{ .User.ScreenName }}</title>
+    <link rel="icon" type="image/png" id="icon-png" href="{{ .User.ProfileImageUrlHttps }}" />
 
     <!-- icons -->
     <link href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet">
@@ -17,10 +17,10 @@
   </head>
   <body class="">
     <div id="wrapper">
-      <h1>Admin for @{{ .ScreenName }}</h1>
+      <h1>Admin for @{{ .User.ScreenName }}</h1>
 
       <div id="export">
-        <a href="/admin/archive/export">Export</a>
+        <a href="/admin/archive/export" download="">Export</a>
       </div>
 
       <div id="import">
