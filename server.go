@@ -9,7 +9,6 @@ import (
 	"context"
 	"path"
 	"bytes"
-	//"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -17,6 +16,7 @@ import (
 	"encoding/json"
 	"encoding/csv"
 	"encoding/xml"
+	"archive/zip"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 	"google.golang.org/appengine/log"
@@ -192,7 +192,7 @@ func archiveExportHandler(w http.ResponseWriter, r *http.Request) {
 		"url",
 		"deleted",
 	}
-	//rows := [i][len(headers)]string{}
+
 	rows := make([][]string, len(tweets))
 	for i, tweet := range tweets {
 		rows[i] = []string{
@@ -207,9 +207,17 @@ func archiveExportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("content-disposition", "attachment; filename=\"" + user.ScreenName + "-tweets.csv\"")
+	w.Header().Set("content-disposition", "attachment; filename=\"" + user.ScreenName + "-archive.zip\"")
 
-	writer := csv.NewWriter(w)
+	zipWriter := zip.NewWriter(w)
+	fileWriter, err := zipWriter.Create("tweets.csv")
+	if err != nil {
+		log.Errorf(ctx, "Error creating zip: %v", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
+	writer := csv.NewWriter(fileWriter)
 	err = writer.Write(headers)
 	if err != nil {
 		log.Errorf(ctx, "Error writing headers: %v", err)
@@ -225,7 +233,8 @@ func archiveExportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writer.Flush()
-	//w.WriteHeader(http.StatusOK)
+	zipWriter.Flush()
+	zipWriter.Close()
 }
 
 func archiveImportHandler(w http.ResponseWriter, r *http.Request) {
