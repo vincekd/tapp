@@ -6,36 +6,37 @@ const gulp = require("gulp"),
       uglify = require("gulp-uglify-es").default,
       ts = require("gulp-typescript");
 
-gulp.task("default", ["init-dist", "sass", "ts", "build", "uglify"], function() {
-    console.log();
-    console.log("!!! remember to remove 'node_modules' from app.yaml !!!");
-    console.log();
-});
-
+// gulp.task("default", "init-dist", "sass", "ts", "build", "uglify"], function() {
+//     console.log();
+//     console.log("!!! remember to remove 'node_modules' from app.yaml !!!");
+//     console.log();
+// });
 gulp.task("dev-watch", function() {
     gulp.watch("./src/scss/*", ["sass"]);
     gulp.watch("./src/ts/*", ["ts"]);
 });
+gulp.task("init-dist", initDist);
+gulp.task("sass", gulp.series("init-dist", compileSass));
+gulp.task("ts", gulp.series("init-dist", compileTs));
+gulp.task("build", gulp.series("ts", build));
+gulp.task("uglify", gulp.series("build", uglifyPkg));
 
-gulp.task("init-dist", function() {
+function initDist() {
     return Promise.all([
         new Promise(r => mkdirp("./dist/js/", () => r())),
         new Promise(r => mkdirp("./dist/css/", () => r()))
     ]);
-});
-
-gulp.task("sass", ["init-dist"], function() {
+}
+function compileSass() {
     return gulp.src("./src/scss/*").
         pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError)).
         pipe(gulp.dest("./dist/css"));
-});
-
-gulp.task("ts", ["init-dist"], function() {
-    let tsProject = ts.createProject("tsconfig.json");
+}
+function compileTs() {
+    const tsProject = ts.createProject("tsconfig.json");
     return tsProject.src().pipe(tsProject()).js.pipe(gulp.dest("./dist/js/"));
-});
-
-gulp.task("build", ["ts"], function() {
+}
+function build() {
     const CONFIG_FILE = "./dist/js/systemjs.config.js";
     var builder = new Builder("./");
     return new Promise(resolve => {
@@ -50,12 +51,11 @@ gulp.task("build", ["ts"], function() {
             });
         });
     });
-});
-
-gulp.task("uglify", ["build"], function() {
+}
+function uglifyPkg() {
     return gulp.src("dist/js/app.js")
         .pipe(rename("app.min.js"))
         .pipe(uglify({
             "compress": true
         })).pipe(gulp.dest("dist/js/"));
-});
+}

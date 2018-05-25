@@ -1,12 +1,9 @@
 
-const VERSION = "v0.1.0";
+const VERSION = "v0.1.1";
 const RESOURCE_CACHE = "tapp.resources." + VERSION;
 const USER_CACHE = "tapp.user." + VERSION;
-const TWEET_CACHE = "tapp.tweets." + VERSION;
-const CACHE_WHITELIST = [RESOURCE_CACHE, USER_CACHE, TWEET_CACHE];
+const CACHE_WHITELIST = [RESOURCE_CACHE, USER_CACHE];
 const USER_URL = "/user";
-//, "/tweets/search"
-const TWEET_URLS = ["/tweets/best", "/tweets/latest"];
 const CACHED_RESOURCES = [
     // CSS
     "/media/twitter-fontello/css/tweet-icons.css",
@@ -44,8 +41,7 @@ self.addEventListener("fetch", (event: any) => {
     const isResource = (CACHED_RESOURCES.indexOf(url.pathname) > -1 ||
                         suffixes.some(s => url.pathname.endsWith(s)));
     const isUser = url.pathname === USER_URL;
-    const isTweets = TWEET_URLS.indexOf(url.pathname) > -1;
-    if (isResource || isUser || isTweets) {
+    if (isResource || isUser) {
         event.respondWith(caches.match(event.request, {ignoreSearch: isResource}).then(resp => {
             if (isResource) {
                 return resp || fetch(event.request).then(resp => {
@@ -57,7 +53,7 @@ self.addEventListener("fetch", (event: any) => {
             } else {
                 // eventually fresh
                 const req = fetch(event.request).then(resp => {
-                    return caches.open(isUser ? USER_CACHE : TWEET_CACHE).then(cache => {
+                    return caches.open(USER_CACHE).then(cache => {
                         cache.put(event.request, resp.clone());
                         return resp;
                     });
