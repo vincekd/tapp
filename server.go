@@ -83,11 +83,28 @@ func init() {
 	http.HandleFunc("/admin", appHandler(indexHandler))
 	http.HandleFunc("/admin/archive/import", appHandler(archiveImportHandler))
 	http.HandleFunc("/admin/archive/export", appHandler(archiveExportHandler))
+	http.HandleFunc("/admin/delete", appHandler(toggleDeletedHandler))
 
 	// rss feed
 	http.HandleFunc("/feed/latest.xml", appHandler(feedHandler))
 
 	TwitterApi, MyToken = LoadCredentials(false)
+}
+
+func toggleDeletedHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	params := r.URL.Query()
+	id, _ := strconv.Atoi(params.Get("id"))
+	tweet := MyTweet{Id: int64(id)}
+	log.Debugf(ctx, "deleting tweet: %+v", tweet)
+
+	if err := datastore.Get(ctx, tweet.GetKey(ctx), &tweet); err != nil {
+		//TODO: return statusnotfound
+		return fmt.Errorf("Error getting tweet from datastore: %v", err)
+	}
+	tweet.Deleted = !tweet.Deleted
+
+	_, err := datastore.Put(ctx, tweet.GetKey(ctx), &tweet)
+	return err
 }
 
 func feedHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -310,7 +327,6 @@ func archiveImportHandler(ctx context.Context, w http.ResponseWriter, r *http.Re
 func tweetHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	params := r.URL.Query()
 	id, _ := strconv.Atoi(params.Get("id"))
-
 	tweet := MyTweet{Id: int64(id)}
 
 	if err := datastore.Get(ctx, tweet.GetKey(ctx), &tweet); err != nil {

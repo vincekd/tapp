@@ -50,4 +50,25 @@ class Upload {
     }
 }
 
+class Deleter {
+    constructor() {
+        document.getElementById("delete-tweet")!.addEventListener("click", () => {
+            this.click();
+        }, false);
+    }
+
+    public click(): void {
+        const el = document.getElementById("delete-tweet-id") as HTMLInputElement;
+        fetch("/admin/delete?id=" + el!.value, {
+            method: "GET",
+            credentials: "include",
+        }).then(() => {
+            el!.value = "";
+        }).catch(err => {
+            console.error("error deleting tweet", err);
+        });
+    }
+}
+
 let upload = new Upload();
+let deleter = new Deleter();

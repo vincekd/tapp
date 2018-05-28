@@ -66,6 +66,10 @@ handlers:
   script: _go_app
   secure: always
   login: admin
+- url: /admin/delete
+  script: _go_app
+  secure: always
+  login: admin
 
 # feed handlers
 - url: /feed/latest.xml
