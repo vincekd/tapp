@@ -250,18 +250,13 @@ export class TweetComponent implements OnInit {
 export class TweetFragComponent {
     public likeIntentUrl: string = "https://twitter.com/intent/like?tweet_id=";
     public rtIntentUrl: string = "https://twitter.com/intent/retweet?tweet_id=";
-    public favstarUrl: string = "https://favstar.fm/users/" + '@' + "/status/";
 
     @Input("tweet")
     public tweet?: Tweet;
     @Input("showInternalLink")
     public showInternalLink?: boolean;
 
-    constructor(private analServ: AnalyticsService, userServ: UserService) {
-        userServ.getUser().then(u => {
-            this.favstarUrl = "https://favstar.fm/users/" + u.ScreenName + "/status/";
-        });
-    }
+    constructor(private analServ: AnalyticsService) { }
 
     public trackClick(event: MouseEvent, which: string): void {
         this.analServ.trackEvent('click-external-link', which, 'button-' + event.button);
