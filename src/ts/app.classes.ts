@@ -34,4 +34,5 @@ export interface Media {
     ExpandedUrl: string;
     Type: string;
     MediaUrl: string;
+    UploadFileName: string;
 }

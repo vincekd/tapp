@@ -38,6 +38,9 @@ handlers:
 - url: /tweet
   script: _go_app
   secure: always
+- url: /tweet/media
+  script: _go_app
+  secure: always
 
 # cron handlers
 - url: /update/user
@@ -78,6 +81,12 @@ handlers:
 # - url: /xml/rss/tweets/best.xml
 #   script: _go_app
 #   secure: always
+
+# random
+- url: /update_media
+  script: _go_app
+  secure: always
+  login: admin
 
 # static dirs
 - url: /css

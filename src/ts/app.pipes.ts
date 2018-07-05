@@ -19,7 +19,8 @@ export class ReplaceMediaPipe implements PipeTransform {
         if (tweet.Media) {
             let text = tweet.Text;
             tweet.Media.forEach(m => {
-                text = text.replace(m.Url, `<img src="${m.MediaUrl}" />`);
+                const url = "/tweet/media?file=" + m.UploadFileName;
+                text = text.replace(m.Url, `<img src="${url}" />`);
             });
             return text;
         }

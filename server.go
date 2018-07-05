@@ -9,6 +9,7 @@ import (
 	"context"
 	"path"
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -22,7 +23,9 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/memcache"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/file"
 	"github.com/ChimeraCoder/anaconda"
+	"cloud.google.com/go/storage"
 )
 
 var (
@@ -85,10 +88,75 @@ func init() {
 	http.HandleFunc("/admin/archive/export", appHandler(archiveExportHandler))
 	http.HandleFunc("/admin/delete", appHandler(toggleDeletedHandler))
 
+	// temp request to update pictures
+	http.HandleFunc("/update_media", appHandler(updateMedia))
+
+	// media
+	http.HandleFunc("/tweet/media", appHandler(tweetMediaHandler))
+
 	// rss feed
 	http.HandleFunc("/feed/latest.xml", appHandler(feedHandler))
 
 	TwitterApi, MyToken = LoadCredentials(false)
+}
+
+func tweetMediaHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	filePath := r.URL.Query().Get("file")
+	if filePath == "" {
+		return fmt.Errorf("No file path passed")
+	}
+	bucket, err := getBucket(ctx)
+	if err != nil {
+		return fmt.Errorf("Error getting bucket: %v", err)
+	}
+
+	rc, err := bucket.Object(filePath).NewReader(ctx)
+	if err != nil {
+		return fmt.Errorf("readFile: unable to open file %q: %v", filePath, err)
+	}
+
+	defer rc.Close()
+	slurp, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return fmt.Errorf("readFile: unable to read data from file %q: %v", filePath, err)
+	}
+
+	_, err = w.Write(slurp)
+	return err
+}
+
+func updateMedia(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	query := datastore.NewQuery("MyTweet");
+	tweets := []MyTweet{}
+	_, err := query.GetAll(ctx, &tweets)
+	//tweets, err := fetchTweets(ctx, tweets, int64(0), int64(0))
+	if err != nil {
+		return fmt.Errorf("Error getting db tweets: %v", err)
+	}
+
+	toSave := []MyTweet{}
+
+	for _, tweet := range tweets {
+		if tweet.Media != nil && len(tweet.Media) > 0 {
+			for i, _ := range tweet.Media {
+				m := &tweet.Media[i]
+				if m.UploadFileName == "" {
+					m.UploadFileName = getMediaFilePath(tweet.IdStr, *m, i)
+					log.Debugf(ctx, "Uploading image path: " + m.UploadFileName)
+					if err := fetchAndStoreMediaFile(ctx, *m); err != nil {
+						return fmt.Errorf("Error fetching and storing media file: %v", err)
+					}
+					toSave = append(toSave, tweet)
+				}
+			}
+		}
+	}
+
+	if err := storeTweets(ctx, toSave); err != nil {
+		return fmt.Errorf("Error storing tweet: %v", err)
+	}
+
+	return nil
 }
 
 func toggleDeletedHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -765,7 +833,10 @@ func checkTweets(ctx context.Context, tweets []MyTweet) ([]MyTweet, error) {
 			t.Rts = aTweet.RetweetCount
 			t.Ratio = getRatio(aTweet.FavoriteCount, aTweet.RetweetCount)
 			if t.Media == nil || len(t.Media) == 0 {
-				t.Media = getMedia(&aTweet)
+				t.Media, err = getMedia(ctx, &aTweet)
+				if err != nil {
+					return nil, err
+				}
 			}
 			if t.Text == "" {
 				t.Text = aTweet.FullText
@@ -859,7 +930,7 @@ func fetchTweets(ctx context.Context, tweets []MyTweet, lastId int64, latestId i
 		return tweets, nil
 	}
 
-	procTweets, newLastId := processTweets(aTweets)
+	procTweets, newLastId := processTweets(ctx, aTweets)
 	tweets = append(tweets, procTweets...)
 
 	log.Infof(ctx, "Fetched Tweets: %v; (newLastId): %v", len(tweets), newLastId)
@@ -867,7 +938,7 @@ func fetchTweets(ctx context.Context, tweets []MyTweet, lastId int64, latestId i
 	return fetchTweets(ctx, tweets, newLastId, latestId)
 }
 
-func processTweets(tweets []anaconda.Tweet) ([]MyTweet, int64) {
+func processTweets(ctx context.Context, tweets []anaconda.Tweet) ([]MyTweet, int64) {
 	out := []MyTweet{}
 	lastId := int64(0)
 	for _, tweet := range tweets {
@@ -886,8 +957,9 @@ func processTweets(tweets []anaconda.Tweet) ([]MyTweet, int64) {
 				Text: tweet.FullText,
 				Url: TWITTER_URL + MyToken.ScreenName + "/status/" + tweet.IdStr,
 				Deleted: false,
-				Media: getMedia(&tweet),
 			}
+			m, _ := getMedia(ctx, &tweet)
+			myTweet.Media = m
 
 			out = append(out, myTweet)
 		}
@@ -896,20 +968,87 @@ func processTweets(tweets []anaconda.Tweet) ([]MyTweet, int64) {
 	return out, lastId
 }
 
-func getMedia(tweet *anaconda.Tweet) (media []Media) {
+func getMedia(ctx context.Context, tweet *anaconda.Tweet) (media []Media, err error) {
 	if len(tweet.Entities.Media) > 0 {
-		//Has media entities...
-		for _, ent := range tweet.Entities.Media {
-			media = append(media, Media{
+		for i, ent := range tweet.Entities.Media {
+			m := Media{
 				Type: ent.Type,
 				IdStr: ent.Id_str,
 				Url: ent.Url,
 				ExpandedUrl: ent.Expanded_url,
 				MediaUrl: ent.Media_url_https,
-			})
+			}
+			m.UploadFileName = getMediaFilePath(tweet.IdStr, m, i)
+
+			if err := fetchAndStoreMediaFile(ctx, m); err != nil {
+				return nil, fmt.Errorf("Error fetching and storing media file: %v", err)
+			} else {
+				media = append(media, m)
+			}
 		}
 	}
-	return media
+	return media, nil
+}
+
+func getBucket(ctx context.Context) (*storage.BucketHandle, error) {
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting storage.Client: %v", err)
+	}
+
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting default bucket name: %v", err)
+	}
+
+	return client.Bucket(bucketName), nil
+}
+
+func fetchAndStoreMediaFile(ctx context.Context, media Media) error {
+	bucket, err := getBucket(ctx)
+	if err != nil {
+		return fmt.Errorf("Error getting bucket: %v", err)
+	}
+
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get(media.MediaUrl)
+	if err != nil {
+		return fmt.Errorf("Error fetching media file from twitter: %v", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Error reading response: %v", err)
+		}
+
+		log.Debugf(ctx, "Storing: " + media.UploadFileName)
+		if err = storeMediaFile(ctx, bucket, media.UploadFileName, bodyBytes); err != nil {
+			log.Errorf(ctx, "Error storing media file: %v", err)
+			// send bad request or something
+			return fmt.Errorf("Error storing media file to cloud storage: %v", err)
+		}
+	} else {
+		// send back request or something
+		log.Warningf(ctx, "Status not ok: %v", resp)
+		//return fmt.Errorf("Response status bad: %v", resp)
+
+	}
+	return nil
+}
+
+func storeMediaFile(ctx context.Context, bucket *storage.BucketHandle, fileName string, content []byte) error {
+	wc := bucket.Object(fileName).NewWriter(ctx)
+	if _, err := wc.Write(content); err != nil {
+		return err
+	}
+
+	if err := wc.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getTerms(search string) (terms [][]SearchTerm) {
@@ -983,6 +1122,12 @@ func RemovePunctuation(text string, quotes bool) string {
 	text = reg.ReplaceAllString(text, " ")
 	reg, _ = regexp.Compile(" +")
 	return reg.ReplaceAllString(text, " ")
+}
+
+func getMediaFilePath(tweetID string, m Media, i int) string {
+	num := strconv.Itoa(i + 1)
+	ext := path.Ext(m.MediaUrl)
+	return "status/" + tweetID + "/" + m.Type + "/" + num + ext
 }
 
 func testTweet(tweet anaconda.Tweet) bool {

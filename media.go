@@ -6,4 +6,5 @@ type Media struct {
 	ExpandedUrl string
 	Type string
 	MediaUrl string
+	UploadFileName string
 }
