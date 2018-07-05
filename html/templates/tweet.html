@@ -9,14 +9,6 @@
 <div class="tweet-text" [innerHTML]="tweet | ReplaceMedia"></div>
 <div class="tweet-metadata">
   <div class="tweet-stats">
-    <a class="faves"
-       matTooltip="{{tweet.Faves}} Likes!"
-       target="_blank"
-       (mouseup)="trackClick($event, 'like-' + tweet.IdStr)"
-       [href]="likeIntentUrl + tweet.IdStr">
-      <i class="icon-heart"></i>
-      <span [textContent]="tweet.Faves"></span>
-    </a>
     <a class="rts"
        matTooltip="{{tweet.Rts}} Retweets!"
        target="_blank"
@@ -24,6 +16,14 @@
        [href]="rtIntentUrl + tweet.IdStr">
       <i class="icon-retweet"></i>
       <span [textContent]="tweet.Rts"></span>
+    </a>
+    <a class="faves"
+       matTooltip="{{tweet.Faves}} Likes!"
+       target="_blank"
+       (mouseup)="trackClick($event, 'like-' + tweet.IdStr)"
+       [href]="likeIntentUrl + tweet.IdStr">
+      <i class="icon-heart"></i>
+      <span [textContent]="tweet.Faves"></span>
     </a>
   </div>
 
