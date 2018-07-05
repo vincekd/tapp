@@ -129,7 +129,7 @@ func updateMedia(ctx context.Context, w http.ResponseWriter, r *http.Request) er
 	query := datastore.NewQuery("MyTweet");
 	tweets := []MyTweet{}
 	_, err := query.GetAll(ctx, &tweets)
-	//tweets, err := fetchTweets(ctx, tweets, int64(0), int64(0))
+
 	if err != nil {
 		return fmt.Errorf("Error getting db tweets: %v", err)
 	}
@@ -142,7 +142,6 @@ func updateMedia(ctx context.Context, w http.ResponseWriter, r *http.Request) er
 				m := &tweet.Media[i]
 				if m.UploadFileName == "" {
 					m.UploadFileName = getMediaFilePath(tweet.IdStr, *m, i)
-					log.Debugf(ctx, "Uploading image path: " + m.UploadFileName)
 					if err := fetchAndStoreMediaFile(ctx, *m); err != nil {
 						return fmt.Errorf("Error fetching and storing media file: %v", err)
 					}
@@ -163,7 +162,7 @@ func toggleDeletedHandler(ctx context.Context, w http.ResponseWriter, r *http.Re
 	params := r.URL.Query()
 	id, _ := strconv.Atoi(params.Get("id"))
 	tweet := MyTweet{Id: int64(id)}
-	log.Debugf(ctx, "deleting tweet: %+v", tweet)
+	log.Infof(ctx, "deleting tweet: %+v", tweet)
 
 	if err := datastore.Get(ctx, tweet.GetKey(ctx), &tweet); err != nil {
 		//TODO: return statusnotfound
@@ -666,7 +665,6 @@ func getSearchTweets(ctx context.Context, page int, search string, order string)
 	search = RemovePunctuation(strings.TrimSpace(search), false)
 	if len(search) > MIN_SEARCH_LENGTH {
 		terms := getTerms(search)
-		//log.Debugf(ctx, "terms: %v", terms)
 
 		if len(terms) > 0 {
 			query := datastore.NewQuery("MyTweet").
@@ -958,7 +956,10 @@ func processTweets(ctx context.Context, tweets []anaconda.Tweet) ([]MyTweet, int
 				Url: TWITTER_URL + MyToken.ScreenName + "/status/" + tweet.IdStr,
 				Deleted: false,
 			}
-			m, _ := getMedia(ctx, &tweet)
+			m, err := getMedia(ctx, &tweet)
+			if err != nil {
+				log.Warningf(ctx, "Error getting media: %v", err)
+			}
 			myTweet.Media = m
 
 			out = append(out, myTweet)
@@ -979,12 +980,11 @@ func getMedia(ctx context.Context, tweet *anaconda.Tweet) (media []Media, err er
 				MediaUrl: ent.Media_url_https,
 			}
 			m.UploadFileName = getMediaFilePath(tweet.IdStr, m, i)
-
+			//log.Infof(ctx, "Uploading image path: " + m.UploadFileName + ", %+v", m)
 			if err := fetchAndStoreMediaFile(ctx, m); err != nil {
 				return nil, fmt.Errorf("Error fetching and storing media file: %v", err)
-			} else {
-				media = append(media, m)
 			}
+			media = append(media, m)
 		}
 	}
 	return media, nil
@@ -1023,7 +1023,7 @@ func fetchAndStoreMediaFile(ctx context.Context, media Media) error {
 			return fmt.Errorf("Error reading response: %v", err)
 		}
 
-		log.Debugf(ctx, "Storing: " + media.UploadFileName)
+		log.Infof(ctx, "Storing media file: " + media.UploadFileName)
 		if err = storeMediaFile(ctx, bucket, media.UploadFileName, bodyBytes); err != nil {
 			log.Errorf(ctx, "Error storing media file: %v", err)
 			// send bad request or something

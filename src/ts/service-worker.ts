@@ -1,5 +1,5 @@
 
-const VERSION = "v0.1.2";
+const VERSION = "v0.1.3";
 const RESOURCE_CACHE = "tapp.resources." + VERSION;
 const USER_CACHE = "tapp.user." + VERSION;
 const CACHE_WHITELIST = [RESOURCE_CACHE, USER_CACHE];
