@@ -1,6 +1,6 @@
 <div></div>
 <div id="header">
-  <img *ngIf="user" [src]="user?.ProfileImageUrlHttps" />
+  <img *ngIf="user" [src]="'/media?file=' + user?.Media.UploadFileName" />
   <div id="user-info">
     <span id="username">
       <span [textContent]="user?.Name"></span>

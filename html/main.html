@@ -38,7 +38,7 @@
     <base href="/" />
 
     <title>{{ .User.ScreenName }}</title>
-    <link rel="icon" type="image/png" id="icon-png" href="{{ .User.ProfileImageUrlHttps }}" />
+    <link rel="icon" type="image/png" id="icon-png" href="/media?file={{ .User.Media.UploadFileName }}" />
 
     <!-- icons -->
     <link href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet">

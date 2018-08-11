@@ -20,6 +20,7 @@ type User struct {
 	Verified bool
 	Link string
 	Updated int64
+	Media Media
 }
 
 func (user User) GetKey(ctx context.Context) *datastore.Key {

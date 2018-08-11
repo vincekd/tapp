@@ -92,7 +92,7 @@ func init() {
 	http.HandleFunc("/update_media", appHandler(updateMedia))
 
 	// media
-	http.HandleFunc("/tweet/media", appHandler(tweetMediaHandler))
+	http.HandleFunc("/media", appHandler(mediaHandler))
 
 	// rss feed
 	http.HandleFunc("/feed/latest.xml", appHandler(feedHandler))
@@ -100,7 +100,7 @@ func init() {
 	TwitterApi, MyToken = LoadCredentials(false)
 }
 
-func tweetMediaHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func mediaHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	filePath := r.URL.Query().Get("file")
 	if filePath == "" {
 		return fmt.Errorf("No file path passed")
@@ -626,6 +626,20 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 		return nil, err
 	}
 
+	ext := path.Ext(anacondaUser.ProfileImageUrlHttps)
+	media := Media{
+		IdStr: "avatar-" + anacondaUser.IdStr,
+		Url: anacondaUser.ProfileImageUrlHttps,
+		ExpandedUrl: anacondaUser.ProfileImageUrlHttps,
+		Type: "text",
+		MediaUrl: anacondaUser.ProfileImageUrlHttps,
+		UploadFileName: "user/" + anacondaUser.IdStr + "/avatar" + ext,
+	}
+
+	if err := fetchAndStoreMediaFile(ctx, media); err != nil {
+		return nil, fmt.Errorf("Error fetching and storing user profile pic: %v", err)
+	}
+
 	user := &User{
 		ScreenName: anacondaUser.ScreenName,
 		Id: anacondaUser.Id,
@@ -640,6 +654,7 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 		Location: anacondaUser.Location,
 		Verified: anacondaUser.Verified,
 		Link: anacondaUser.URL,
+		Media: media,
 	}
 
 	store := &memcache.Item{
@@ -647,7 +662,6 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 		Object: *user,
 	}
 	memcache.JSON.Set(ctx, store)
-
 	if err = user.Store(ctx); err != nil {
 		log.Errorf(ctx, "failed to store user: %v", err)
 		return nil, err
