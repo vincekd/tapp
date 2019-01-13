@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script>
-     if (location.host.split(":")[0] !== 'localhost' && 'serviceWorker' in navigator) {
+    <!-- <script>
+         if (location.host.split(":")[0] !== 'localhost' && 'serviceWorker' in navigator) {
          try {
-             navigator.serviceWorker.register("/service-worker.js").then(sw => {
-                 console.log("service worker registered", sw);
-                 sw.update();
-             }).catch(e => {
-                 console.error("Error registering service worker", e);
-             });
+         navigator.serviceWorker.register("/service-worker.js").then(sw => {
+         console.log("service worker registered", sw);
+         sw.update();
+         }).catch(e => {
+         console.error("Error registering service worker", e);
+         });
          } catch (e) {
-             console.error("error registering service worker", e);
+         console.error("error registering service worker", e);
          }
-     }
-    </script>
+         }
+         </script> -->
     
     {{if .HasGaKey }}
     <script>

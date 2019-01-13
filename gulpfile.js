@@ -18,7 +18,7 @@ gulp.task("dev-watch", function() {
 gulp.task("init-dist", initDist);
 gulp.task("sass", gulp.series("init-dist", compileSass));
 gulp.task("ts", gulp.series("init-dist", compileTs));
-gulp.task("build", gulp.series("ts", build));
+gulp.task("build", gulp.series("ts", "sass", build));
 gulp.task("uglify", gulp.series("build", uglifyPkg));
 gulp.task("deploy", () => {
     // run: `goapp deploy -application ${APPNAME} -version tapp-$VERSION_NUM`;
