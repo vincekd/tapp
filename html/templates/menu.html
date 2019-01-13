@@ -2,13 +2,13 @@
 <div id="header">
   <img *ngIf="user" [src]="'/media?file=' + user?.Media.UploadFileName" />
   <div id="user-info">
-    <span id="username">
-      <span [textContent]="user?.Name"></span>
-      <span>-</span>
-    </span>
-    <a class="profile" target="_blank" [href]="user?.Url" id="user-handle">
-      @<span [textContent]="user?.ScreenName"></span>
-    </a>
+    <div id="username" title="{{ user?.Name }}">{{ user?.Name }}</div>
+    <span>-</span>
+    <div id="user-handle">
+      <a class="profile" target="_blank" [href]="user?.Url" title="{{ user?.ScreenName }}">
+        @{{ user?.ScreenName }}
+      </a>
+    </div>
   </div>
   <div>
     <a id="menu" mat-button="" [matMenuTriggerFor]="menu">

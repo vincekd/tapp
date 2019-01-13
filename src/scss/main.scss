@@ -127,7 +127,7 @@ header {
   height: $header-height;
   background: $menu-color;
   color: $font-color;
-  font-size: 38px;
+  font-size: 36px;
   vertical-align: top;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -140,35 +140,43 @@ header {
     img {
       height: $header-height;
     }
-  }
 
-  #menu {
-    cursor: pointer;
-    @include no-user-select();
-    svg {
-      height: 20px;
-      width: 20px;
-      line {
-        stroke: $font-color;
-        stroke-width: 2px;
+    #menu {
+      cursor: pointer;
+      @include no-user-select();
+      svg {
+        height: 20px;
+        width: 20px;
+        line {
+          stroke: $font-color;
+          stroke-width: 2px;
+        }
       }
-    }
-    &:hover {
-      svg line {
-        stroke: $font-hover-color;
-      }
-    }
-  }
-
-  #user-info {
-    vertical-align: top;
-    a.profile {
-      color: $font-color;
-      text-decoration: none;
-      font-size: 20px;
-      vertical-align: middle;
       &:hover {
-        color: $font-hover-color;
+        svg line {
+          stroke: $font-hover-color;
+        }
+      }
+    }
+
+    #user-info {
+      vertical-align: top;
+      display: grid;
+      grid-template-columns: minmax(auto, 50%) auto minmax(auto, 50%);
+      grid-column-gap: 5px;
+      > div {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+      a.profile {
+        color: $font-color;
+        text-decoration: none;
+        font-size: 20px;
+        vertical-align: middle;
+        &:hover {
+          color: $font-hover-color;
+        }
       }
     }
   }
@@ -337,7 +345,10 @@ header {
       #user-info {
         text-align: center;
         margin-right: 0;
-        #username {
+        display: block;
+        overflow: hidden;
+        #username,
+        > span {
           display: none;
         }
         #user-handle {
