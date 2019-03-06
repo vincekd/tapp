@@ -385,7 +385,7 @@ func tweetsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 	i, _ := strconv.Atoi(params.Get("page"))
 	which := strings.Replace(path.Clean(r.URL.Path), "/tweets/", "", 1)
 	_, err = memcache.JSON.Get(ctx, MEMCACHE_TWEETS_KEY + which, &tweets)
-	if i > 0 || err != nil {
+	if i > 0 || tweets == nil || err != nil {
 		switch which {
 		case "best":
 			tweets, err = getBestTweets(ctx, i)
@@ -744,8 +744,21 @@ func fetchAndStoreTweets(ctx context.Context) ([]MyTweet, error) {
 		return nil, err
 	}
 
-	if err = storeTweets(ctx, tweets); err != nil {
-		return nil, err
+	if len(tweets) > 0 {
+		if err = storeTweets(ctx, tweets); err != nil {
+			return nil, err
+		}
+		// invalidate memcache
+		memcache.JSON.SetMulti(ctx, []*memcache.Item{
+			// &memcache.Item{
+			// 	Key: MEMCACHE_TWEETS_KEY + "best",
+			// 	Object: nil,
+			// },
+			&memcache.Item{
+				Key: MEMCACHE_TWEETS_KEY + "latest",
+				Object: nil,
+			},
+		})
 	}
 	return tweets, nil
 }
