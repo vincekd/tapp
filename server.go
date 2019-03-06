@@ -579,8 +579,7 @@ func getUser(ctx context.Context) (*User, error) {
 		var err error
 		user, err = getDataStoreUser(ctx, MyToken.ScreenName)
 		if err != nil || user == nil {
-			fetchAndStoreUser(ctx)
-			return user, nil
+			return fetchAndStoreUser(ctx)
 		}
 		return user, nil
 	}
