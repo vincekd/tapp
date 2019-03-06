@@ -88,9 +88,6 @@ func init() {
 	http.HandleFunc("/admin/archive/export", appHandler(archiveExportHandler))
 	http.HandleFunc("/admin/delete", appHandler(toggleDeletedHandler))
 
-	// temp request to update pictures
-	// http.HandleFunc("/update_media", appHandler(updateMedia))
-
 	// media
 	http.HandleFunc("/media", appHandler(mediaHandler))
 
@@ -105,6 +102,7 @@ func mediaHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 	if filePath == "" {
 		return fmt.Errorf("No file path passed")
 	}
+
 	bucket, err := getBucket(ctx)
 	if err != nil {
 		return fmt.Errorf("Error getting bucket: %v", err)
@@ -124,39 +122,6 @@ func mediaHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 	_, err = w.Write(slurp)
 	return err
 }
-
-// func updateMedia(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-// 	query := datastore.NewQuery("MyTweet");
-// 	tweets := []MyTweet{}
-// 	_, err := query.GetAll(ctx, &tweets)
-
-// 	if err != nil {
-// 		return fmt.Errorf("Error getting db tweets: %v", err)
-// 	}
-
-// 	toSave := []MyTweet{}
-
-// 	for _, tweet := range tweets {
-// 		if tweet.Media != nil && len(tweet.Media) > 0 {
-// 			for i, _ := range tweet.Media {
-// 				m := &tweet.Media[i]
-// 				if m.UploadFileName == "" {
-// 					m.UploadFileName = getMediaFilePath(tweet.IdStr, *m, i)
-// 					if err := fetchAndStoreMediaFile(ctx, *m); err != nil {
-// 						return fmt.Errorf("Error fetching and storing media file: %v", err)
-// 					}
-// 					toSave = append(toSave, tweet)
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	if err := storeTweets(ctx, toSave); err != nil {
-// 		return fmt.Errorf("Error storing tweet: %v", err)
-// 	}
-
-// 	return nil
-// }
 
 func toggleDeletedHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	params := r.URL.Query()
