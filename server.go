@@ -572,13 +572,11 @@ func fetchTweetsHandler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 func getUser(ctx context.Context) (*User, error) {
 	var cached *User
-	_, err := memcache.JSON.Get(ctx, MEMCACHE_USER_KEY + MyToken.ScreenName, &cached)
-	if err != nil {
-		log.Errorf(ctx, "failed to fetch user from memcache: %v", err)
-	}
+	memcache.JSON.Get(ctx, MEMCACHE_USER_KEY + MyToken.ScreenName, &cached)
 
 	if cached == nil {
 		var user *User
+		var err error
 		user, err = getDataStoreUser(ctx, MyToken.ScreenName)
 		if err != nil || user == nil {
 			fetchAndStoreUser(ctx)
@@ -636,6 +634,7 @@ func fetchAndStoreUser(ctx context.Context) (*User, error) {
 		Object: *user,
 	}
 	memcache.JSON.Set(ctx, store)
+
 	if err = user.Store(ctx); err != nil {
 		log.Errorf(ctx, "failed to store user: %v", err)
 		return nil, err
@@ -902,6 +901,13 @@ func getDataStoreUser(ctx context.Context, screenName string) (*User, error) {
 		log.Errorf(ctx, "Error getting user from datastore: %v", err)
 		return nil, err
 	}
+
+	store := &memcache.Item{
+		Key: MEMCACHE_USER_KEY + MyToken.ScreenName,
+		Object: user,
+	}
+	memcache.JSON.Set(ctx, store)
+
 	return &user, nil
 }
 
