@@ -89,7 +89,7 @@ func init() {
 	http.HandleFunc("/admin/delete", appHandler(toggleDeletedHandler))
 
 	// temp request to update pictures
-	http.HandleFunc("/update_media", appHandler(updateMedia))
+	// http.HandleFunc("/update_media", appHandler(updateMedia))
 
 	// media
 	http.HandleFunc("/media", appHandler(mediaHandler))
@@ -125,38 +125,38 @@ func mediaHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 	return err
 }
 
-func updateMedia(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	query := datastore.NewQuery("MyTweet");
-	tweets := []MyTweet{}
-	_, err := query.GetAll(ctx, &tweets)
+// func updateMedia(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// 	query := datastore.NewQuery("MyTweet");
+// 	tweets := []MyTweet{}
+// 	_, err := query.GetAll(ctx, &tweets)
 
-	if err != nil {
-		return fmt.Errorf("Error getting db tweets: %v", err)
-	}
+// 	if err != nil {
+// 		return fmt.Errorf("Error getting db tweets: %v", err)
+// 	}
 
-	toSave := []MyTweet{}
+// 	toSave := []MyTweet{}
 
-	for _, tweet := range tweets {
-		if tweet.Media != nil && len(tweet.Media) > 0 {
-			for i, _ := range tweet.Media {
-				m := &tweet.Media[i]
-				if m.UploadFileName == "" {
-					m.UploadFileName = getMediaFilePath(tweet.IdStr, *m, i)
-					if err := fetchAndStoreMediaFile(ctx, *m); err != nil {
-						return fmt.Errorf("Error fetching and storing media file: %v", err)
-					}
-					toSave = append(toSave, tweet)
-				}
-			}
-		}
-	}
+// 	for _, tweet := range tweets {
+// 		if tweet.Media != nil && len(tweet.Media) > 0 {
+// 			for i, _ := range tweet.Media {
+// 				m := &tweet.Media[i]
+// 				if m.UploadFileName == "" {
+// 					m.UploadFileName = getMediaFilePath(tweet.IdStr, *m, i)
+// 					if err := fetchAndStoreMediaFile(ctx, *m); err != nil {
+// 						return fmt.Errorf("Error fetching and storing media file: %v", err)
+// 					}
+// 					toSave = append(toSave, tweet)
+// 				}
+// 			}
+// 		}
+// 	}
 
-	if err := storeTweets(ctx, toSave); err != nil {
-		return fmt.Errorf("Error storing tweet: %v", err)
-	}
+// 	if err := storeTweets(ctx, toSave); err != nil {
+// 		return fmt.Errorf("Error storing tweet: %v", err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func toggleDeletedHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	params := r.URL.Query()
@@ -419,20 +419,29 @@ func tweetsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 
 	i, _ := strconv.Atoi(params.Get("page"))
 	which := strings.Replace(path.Clean(r.URL.Path), "/tweets/", "", 1)
-	switch which {
-	case "best":
-		tweets, err = getBestTweets(ctx, i)
-	case "latest":
-		tweets, err = getLatestTweets(ctx, i)
-	case "search":
-		tweets, err = getSearchTweets(ctx, i, params.Get("search"), params.Get("order"))
-	default:
-		//TODO: return bad request
-		return fmt.Errorf("Error invalid tweet type: %v", which)
-	}
+	_, err = memcache.JSON.Get(ctx, MEMCACHE_TWEETS_KEY + which, &tweets)
+	if i > 0 || err != nil {
+		switch which {
+		case "best":
+			tweets, err = getBestTweets(ctx, i)
+		case "latest":
+			tweets, err = getLatestTweets(ctx, i)
+		case "search":
+			tweets, err = getSearchTweets(ctx, i, params.Get("search"), params.Get("order"))
+		default:
+			//TODO: return bad request
+			return fmt.Errorf("Error invalid tweet type: %v", which)
+		}
 
-	if err != nil {
-		return fmt.Errorf("Error getting %v tweets: %v", which, err)
+		if err != nil {
+			return fmt.Errorf("Error getting %v tweets: %v", which, err)
+		}
+
+		store := &memcache.Item{
+			Key: MEMCACHE_TWEETS_KEY + which,
+			Object: tweets,
+		}
+		memcache.JSON.Set(ctx, store)
 	}
 
 	var tweetJson []byte
@@ -876,11 +885,13 @@ func checkTweets(ctx context.Context, tweets []MyTweet) ([]MyTweet, error) {
 func getLatestTweet(ctx context.Context) (*MyTweet, error) {
 	var tweets []MyTweet = []MyTweet{}
 	q := datastore.NewQuery("MyTweet").Limit(1).Order("-Id")
+
 	_, err := q.GetAll(ctx, &tweets)
 	if err != nil || len(tweets) == 0 {
 		log.Errorf(ctx, "error getting last stored tweet: %v", err)
 		return nil, err
 	}
+
 	return &tweets[0], nil
 }
 

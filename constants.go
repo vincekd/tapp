@@ -2,7 +2,7 @@ package tapp
 
 const (
 	TWITTER_URL = "https://twitter.com/"
-	MEMCACHE_TWEET_KEY = "TWEETS"
+	MEMCACHE_TWEETS_KEY = "TWEETS."
 	MEMCACHE_USER_KEY = "USER."
 	TWEETS_TO_FETCH = 30
 	MIN_RATIO = float32(0.10)
