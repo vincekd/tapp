@@ -8,7 +8,7 @@ cron:
     max_doublings: 5
 - description: "update stored tweets"
   url: /update/tweets
-  schedule: every 4 hours
+  schedule: every 12 hours
   retry_parameters:
     min_backoff_seconds: 10
     job_retry_limit: 5
