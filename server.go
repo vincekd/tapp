@@ -74,7 +74,7 @@ func init() {
 	http.HandleFunc("/tweet", appHandler(tweetHandler))
 	http.HandleFunc("/tweets/latest", appHandler(tweetsHandler))
 	http.HandleFunc("/tweets/best", appHandler(tweetsHandler))
-	http.HandleFunc("/tweets/search", appHandler(tweetsHandler))
+	http.HandleFunc("/tweets/search", appHandler(searchTweetsHandler))
 
 	// cron requests
 	http.HandleFunc("/fetch", appHandler(validateCron(fetchTweetsHandler)))
@@ -375,6 +375,24 @@ func tweetHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 	return err
 }
 
+func searchTweetsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	params := r.URL.Query()
+	page, _ := strconv.Atoi(params.Get("page"))
+	tweets, err := getSearchTweets(ctx, page, params.Get("search"), params.Get("order"))
+	if err != nil {
+		return fmt.Errorf("Error searching tweets: %v", err)
+	}
+
+	var tweetJson []byte
+	tweetJson, err = json.Marshal(tweets)
+	if err != nil {
+		return fmt.Errorf("Error marshaling json for tweets: %v", err)
+	}
+
+	_, err = w.Write(tweetJson)
+	return err
+}
+
 func tweetsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	params := r.URL.Query()
 	var (
@@ -391,8 +409,8 @@ func tweetsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 			tweets, err = getBestTweets(ctx, i)
 		case "latest":
 			tweets, err = getLatestTweets(ctx, i)
-		case "search":
-			tweets, err = getSearchTweets(ctx, i, params.Get("search"), params.Get("order"))
+		// case "search":
+		// 	tweets, err = getSearchTweets(ctx, i, params.Get("search"), params.Get("order"))
 		default:
 			//TODO: return bad request
 			return fmt.Errorf("Error invalid tweet type: %v", which)
