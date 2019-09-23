@@ -2,10 +2,11 @@
 
 const path = require('path');
 const express = require('express');
-const config = require('./config');
 const StatusCodes = require("http-status-codes");
 const { Feed } = require("feed");
 const csv = require("fast-csv");
+
+const config = require('./config');
 
 const userServ = require("./services/user.service.js");
 const tweetServ = require("./services/tweet.service.js");
@@ -24,12 +25,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.set('trust proxy', true);
 
-// Redirect root to /books
-// app.get('/', (req, res) => {
-//   //res.redirect('/books');
-// });
-
-//app.use("/dist", express.static('dist'));
+// Static files
 app.use("/js/", express.static("dist/js"));
 app.use("/css/", express.static("dist/css"));
 app.use("/media/", express.static('media'));
@@ -52,11 +48,12 @@ app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", 
     });
   });
 });
-app.get("/admin", (req, res) => {
-  userServ.get(config.get("screenName")).then(user => {
-    res.render("admin",  { user });
-  });
-});
+// TODO: admin protection
+// app.get("/admin", (req, res) => {
+//   userServ.get(config.get("screenName")).then(user => {
+//     res.render("admin",  { user });
+//   });
+// });
 
 // AJAX Calls
 app.get("/user", handleAjax((req, res) => userServ.get(config.get("screenName"))));
@@ -75,25 +72,25 @@ app.get("/tweets/:which", handleAjax((req, res) => {
   }
 }));
 
-// admin
-app.get("/admin/delete", async (req, res) => {
-  try {
-    const tweet = await tweetServ.get(req.query.id);
-    if (tweet) {
-      tweet.Deleted = !tweet.Deleted;
-      await tweetServ.save([tweet]);
-      res.status(StatusCodes.OK).json({ deleted: tweet.Deleted });
-    } else {
-      error(res, { code: StatusCodes.NOT_FOUND });
-    }
-  } catch(e) {
-    error(res, e);
-  }
-});
-app.post("/admin/archive/import", (req, res) => {
-  console.log("import new archive");
-  error(res, { code: StatusCodes.NOT_IMPLEMENTED });
-});
+// TODO: admin
+// app.get("/admin/delete", async (req, res) => {
+//   try {
+//     const tweet = await tweetServ.get(req.query.id);
+//     if (tweet) {
+//       tweet.Deleted = !tweet.Deleted;
+//       await tweetServ.save([tweet]);
+//       res.status(StatusCodes.OK).json({ deleted: tweet.Deleted });
+//     } else {
+//       error(res, { code: StatusCodes.NOT_FOUND });
+//     }
+//   } catch(e) {
+//     error(res, e);
+//   }
+// });
+// app.post("/admin/archive/import", (req, res) => {
+//   console.log("import new archive");
+//   error(res, { code: StatusCodes.NOT_IMPLEMENTED });
+// });
 
 // Asset calls
 app.get("/media", (req, res) => {
@@ -101,15 +98,16 @@ app.get("/media", (req, res) => {
     file.createReadStream().on("error", err => error(res, err)).pipe(res);
   }).catch(e => error(res, e));
 });
-app.get("/admin/archive/export", async (req, res) => {
-  try {
-    const tweets = await tweetServ.getAll(true);
-    res.attachment(`${config.get("screenName")}-archive.csv`);
-    csv.write(tweets, { headers: true }).pipe(res);
-  } catch (e) {
-    error(res, e);
-  }
-});
+// TODO: admin
+// app.get("/admin/archive/export", async (req, res) => {
+//   try {
+//     const tweets = await tweetServ.getAll(true);
+//     res.attachment(`${config.get("screenName")}-archive.csv`);
+//     csv.write(tweets, { headers: true }).pipe(res);
+//   } catch (e) {
+//     error(res, e);
+//   }
+// });
 
 // CRON calls
 app.get("/fetch", validateCron(async (req, res) => {
