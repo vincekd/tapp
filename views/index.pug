@@ -3,7 +3,7 @@ html
   head
     if !isDev
         script(type='text/javascript').
-            if ('serviceWorker' in navigator && ) {
+            if ('serviceWorker' in navigator) {
                 try {
                   navigator.serviceWorker.register("/service-worker.js").then(sw => {
                   console.log("service worker registered", sw);
