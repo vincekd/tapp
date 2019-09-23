@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    if !isDev
+        script(type='text/javascript').
+            if ('serviceWorker' in navigator && ) {
+                try {
+                  navigator.serviceWorker.register("/service-worker.js").then(sw => {
+                  console.log("service worker registered", sw);
+                  sw.update();
+                }).catch(e => {
+                  console.error("Error registering service worker", e);
+                });
+              } catch (e) {
+                console.error("error registering service worker", e);
+              }
+            }
+    if gaKey && !isDev
+        script(type='text/javascript').
+            try {
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+                ga('create', '#{gaKey}', 'auto');
+              } catch (e) {
+                console.error("ga err", err);
+              }
+    meta(http-equiv="Content-Type" content="text/html; charset=utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densitydpi=device-dpi, user-scalable=0")
+
+    base(href="/")
+
+    title=user.ScreenName
+    link(rel="icon" type="image/png" id="icon-png" href=user.ProfileImageUrlHttps)
+
+    link(href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet")
+    link(href="/css/theme.css" rel="stylesheet")
+    link(href="/css/main.css" rel="stylesheet")
+  body
+      twitter-app
+
+      script(src="/js/app.min.js")
+

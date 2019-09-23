@@ -1,0 +1,11 @@
+.git/
+node_modules/
+*.log
+.gitignore
+scss/
+ts/
+gulpfile.js
+tsconfig.json
+tmp/
+.dir-locals.el
+*.go

@@ -1,19 +1,19 @@
 cron:
-- description: "fetch new tweets"
+- description: "Fetch new tweets"
   url: /fetch
   schedule: every 30 minutes
   retry_parameters:
     min_backoff_seconds: 10
     job_retry_limit: 5
     max_doublings: 5
-- description: "update stored tweets"
+- description: "Update stored tweets"
   url: /update/tweets
   schedule: every 12 hours
   retry_parameters:
     min_backoff_seconds: 10
     job_retry_limit: 5
     max_doublings: 5
-- description: "update user"
+- description: "Update user"
   url: /update/user
   schedule: every 12 hours
   retry_parameters:

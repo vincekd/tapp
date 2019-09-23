@@ -4,5 +4,5 @@ credentials
 #*#
 .#*
 tmp/
-.dir-locals.el
 dist/
+config.json
