@@ -10,7 +10,7 @@ const CACHED_RESOURCES = [
     "/css/theme.css",
     "/css/main.css",
     // JS
-    "/dist/js/app.min.js",
+    "/js/app.min.js",
     // HTML
     "/templates/menu.html",
     "/templates/tweets.html",
