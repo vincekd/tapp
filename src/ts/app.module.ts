@@ -19,19 +19,22 @@ import { RouterModule, Routes } from '@angular/router';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 // project imports
-import {
-    TwitterAppComponent,
-    MenuComponent,
-    LatestComponent,
-    BestComponent,
-    SearchComponent,
-    TweetComponent,
-    ErrorPageComponent,
-    TweetFragComponent,
-    LoadingSpinnerComponent
-} from './app.components';
-import { UserService, TweetService, AnalyticsService } from './app.services';
-import { CapitalizePipe, ReplaceMediaPipe, TweetDatePipe } from './app.pipes';
+import { TwitterAppComponent, } from "./components/twitter-app.component";
+import { MenuComponent, } from "./components/menu.component";
+import { LatestComponent, } from "./components/latest.component";
+import { BestComponent, } from "./components/best.component";
+import { SearchComponent, } from "./components/search.component";
+import { TweetComponent, } from "./components/tweet.component";
+import { ErrorPageComponent, } from "./components/error-page.component";
+import { TweetFragComponent, } from "./components/tweet-frag.component";
+import { LoadingSpinnerComponent, } from './components/loading-spinner.component';
+
+import { UserService } from "./services/user.service";
+import { TweetService } from "./services/tweet.service";
+import { AnalyticsService } from "./services/analytics.service";
+import { CapitalizePipe } from "./pipes/capitalize.pipe";
+import { ReplaceMediaPipe } from "./pipes/replace-media.pipe";
+import { TweetDatePipe } from "./pipes/tweet-date.pipe";
 
 const appRoutes: Routes = [
     { path : 'latest', component: LatestComponent, data: { state: 'latest' } },
