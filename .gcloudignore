@@ -9,3 +9,4 @@ tsconfig.json
 tmp/
 .dir-locals.el
 *.go
+archive/
