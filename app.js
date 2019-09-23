@@ -59,14 +59,16 @@ app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", 
 app.get("/user", handleAjax((req, res) => userServ.get(config.get("screenName"))));
 // TODO: don't return if deleted?
 app.get("/tweet", handleAjax((req, res) => tweetServ.get(req.query.id)));
-app.get("/tweets/:which", handleAjax((req, res) => {
+app.get("/tweets/:which", handleAjax(async (req, res) => {
   switch (req.params.which) {
     case "best":
       return tweetServ.getBest(req.query.page);
     case "latest":
       return tweetServ.getLatest(req.query.page);
     case "search":
-      return tweetServ.getSearch(req.query.page, req.query.search, req.query.order);
+      // TODO: last/max id
+      return twitterServ.search(config.get("screenName"), req.query.search, req.query.order);
+      //return tweetServ.getSearch(req.query.page, req.query.search, req.query.order);
     default:
       throw { code: StatusCodes.BAD_REQUEST, };
   }

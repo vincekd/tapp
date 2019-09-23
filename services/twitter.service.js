@@ -17,6 +17,31 @@ class TwitterService {
     });
   }
 
+  // INFO: `from:username` is broken in twitter's api...
+  search(name, search, order) {
+    return new Promise((resolve, reject) => {
+      const params = {
+        q: `from:${name} -filter:replies ${search}`,
+        result_type: order === "Id" ? "recent" : "popular",
+        count: 100,
+        include_entities: 1,
+        tweet_mode: "extended",
+        // TODO: implement
+        //max_id: maxid
+      };
+      console.log("params", params);
+
+      this.twit.get("search/tweets", params, (err, data, resp) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log("data", data);
+          resolve(data.statuses.map(t => this.normalizeTwitterTweet(t)));
+        }
+      });
+    });
+  }
+
   getTweets(ids) {
     return new Promise((resolve, reject) => {
       const params = {
