@@ -3,6 +3,7 @@ const StatusCodes = require("http-status-codes");
 
 const {
   MAX_PUT_SIZE,
+  HAS_MORE,
 } = require("../constants.js");
 
 class TAppDataStore {
@@ -75,11 +76,10 @@ class TAppDataStore {
         if (err) {
           reject(err);
         } else {
-          // const hasMore =
-          //       nextQuery.moreResults !== Datastore.NO_MORE_RESULTS
-          //       ? nextQuery.endCursor
-          //       : false;
-          resolve(entities.map(e => this.fromDatastore(e)));
+          // HACK: assign hasMore to array
+          const out = entities.map(e => this.fromDatastore(e));
+          out[HAS_MORE] = nextQuery.moreResults !== Datastore.NO_MORE_RESULTS ? nextQuery.endCursor : false;
+          resolve(out);
         }
       });
     });

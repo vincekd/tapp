@@ -8,6 +8,7 @@ const {
   TWEETS_KEY,
   MIN_SEARCH_LENGTH,
   MAX_API_LOOKUP_SIZE,
+  HAS_MORE,
 } = require("../constants.js");
 
 class TweetService {
@@ -84,11 +85,18 @@ class TweetService {
     return changed;
   }
 
-  async getAll() {
-    const query = ds.Query(TWEETS_KEY).
-          filter("Deleted", "=", false).
-          order("Updated");
-    return await this.run(query);
+  async getAll(includeDeleted = false) {
+    let query = ds.Query(TWEETS_KEY).order("Updated");
+    if (!includeDeleted) {
+      query = query.filter("Deleted", "=", false);
+    }
+
+    const out = await ds.run(query);
+    if (out[HAS_MORE]) {
+      // TODO: has more
+      console.warn("HAS MORE ENTITIES", out.length);
+    }
+    return out.map(this.normalize);
   }
 
   getBest(page) {

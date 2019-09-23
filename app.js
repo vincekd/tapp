@@ -5,6 +5,7 @@ const express = require('express');
 const config = require('./config');
 const StatusCodes = require("http-status-codes");
 const { Feed } = require("feed");
+const csv = require("fast-csv");
 
 const userServ = require("./services/user.service.js");
 const tweetServ = require("./services/tweet.service.js");
@@ -40,6 +41,7 @@ app.get("/favicon.ico", (req, res) => {
   res.status(StatusCodes.NOT_FOUND).send();
 });
 
+// pages
 app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", "/tweet/:tweetID"], (req, res) => {
   userServ.get(config.get("screenName")).then(user => {
     const gaKey = config.get("gaTrackingId");
@@ -50,9 +52,15 @@ app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", 
     });
   });
 });
+app.get("/admin", (req, res) => {
+  userServ.get(config.get("screenName")).then(user => {
+    res.render("admin",  { user });
+  });
+});
 
 // AJAX Calls
 app.get("/user", handleAjax((req, res) => userServ.get(config.get("screenName"))));
+// TODO: don't return if deleted?
 app.get("/tweet", handleAjax((req, res) => tweetServ.get(req.query.id)));
 app.get("/tweets/:which", handleAjax((req, res) => {
   switch (req.params.which) {
@@ -67,10 +75,40 @@ app.get("/tweets/:which", handleAjax((req, res) => {
   }
 }));
 
+// admin
+app.get("/admin/delete", async (req, res) => {
+  try {
+    const tweet = await tweetServ.get(req.query.id);
+    if (tweet) {
+      tweet.Deleted = !tweet.Deleted;
+      await tweetServ.save([tweet]);
+      res.status(StatusCodes.OK).json({ deleted: tweet.Deleted });
+    } else {
+      error(res, { code: StatusCodes.NOT_FOUND });
+    }
+  } catch(e) {
+    error(res, e);
+  }
+});
+app.post("/admin/archive/import", (req, res) => {
+  console.log("import new archive");
+  error(res, { code: StatusCodes.NOT_IMPLEMENTED });
+});
+
+// Asset calls
 app.get("/media", (req, res) => {
   mediaServ.get(req.query.file).then(file => {
     file.createReadStream().on("error", err => error(res, err)).pipe(res);
   }).catch(e => error(res, e));
+});
+app.get("/admin/archive/export", async (req, res) => {
+  try {
+    const tweets = await tweetServ.getAll(true);
+    res.attachment(`${config.get("screenName")}-archive.csv`);
+    csv.write(tweets, { headers: true }).pipe(res);
+  } catch (e) {
+    error(res, e);
+  }
 });
 
 // CRON calls
@@ -154,41 +192,6 @@ app.get("/feed/latest.xml", handleAjax(async (req, res) => {
   res.setHeader("Content-Type", "application/atom+xml; charset=utf-8");
   res.status(StatusCodes.OK).send(feed.atom1());
 }));
-
-// app.get("/dedupe", async (req, res) => {
-//   const tweets = await tweetServ.getAll();
-//   const map = {};
-//   tweets.forEach(t => {
-//     map[t.IdStr] = map[t.IdStr] || [];
-//     map[t.IdStr].push(t);
-//   });
-//   const dupes = [];
-//   Object.keys(map).forEach(key => {
-//     if (map[key].length > 1) {
-//       dupes.push(map[key]);
-//     }
-//   });
-
-//   const toRemove = [];
-//   dupes.forEach(dupe => {
-//     dupe.forEach(item => {
-//       const key = item[Object.getOwnPropertySymbols(item)[0]];
-//       if (key && key.name && !key.id) {
-//         toRemove.push({item, key});
-//       }
-//     });
-//   });
-
-//   const ds = require("./services/datastore.service.js");
-//   //await tweetServ.remove(toRemove);
-//   ds.ds.delete(toRemove.map(a => a.key), (err) => {
-//     if (err) {
-//       console.error(err);
-//     } else {
-//       res.status(StatusCodes.OK).send();
-//     }
-//   });
-// });
 
 // app.get("/unretweet", validateCron((req, res) => {
 

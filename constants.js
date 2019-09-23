@@ -13,4 +13,5 @@ module.exports = {
   USERS_KEY: "User",
   SEARCH_LIMIT: 1000,
   SUMMARY_LENGTH: 30,
+  HAS_MORE: Symbol("tapp-has-more-cursor"),
 };

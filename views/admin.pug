@@ -1,0 +1,28 @@
+doctype html
+html
+  head
+    meta(http-equiv="Content-Type" content="text/html; charset=utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densitydpi=device-dpi, user-scalable=0")
+
+    base(href="/")
+
+    title=user.ScreenName
+    link(rel="icon" type="image/png" id="icon-png" href=user.ProfileImageUrlHttps)
+
+    link(href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet")
+
+    link(href="/css/admin.css" rel="stylesheet")
+
+  body
+    div
+      h1 Admin for @#{user.ScreenName}
+      div(id="export")
+        a(href="/admin/archive/export" download="") Export
+      div(id="import")
+        input(type="file" accept=".csv")
+        button(type="button" id="import-btn") Import
+      div(id="delete")
+        input(type="text" placeholder="Tweet Id" id="delete-tweet-id")
+        button(type="button" id="delete-tweet") Toggle Deleted
+
+    script(src="/js/admin.js")
