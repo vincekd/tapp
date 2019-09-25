@@ -31,8 +31,18 @@ html
 
     base(href="/")
 
+    - let description = `@${user.ScreenName}'s tweets --- ${user.Description}`;
+    meta(name="description" content=description)
     title=user.ScreenName
-    link(rel="icon" type="image/png" id="icon-png" href=user.ProfileImageUrlHttps)
+
+    meta(property="og:type" content="article")
+    meta(property="og:site_name" content="/")
+    meta(property="og:title" content=`@${user.ScreenName}'s tweets`)
+    meta(property="og:description" content=description)
+    meta(property="og:url" content="/")
+    meta(property="og:media" content=`/media?file=${user.Media.UploadFileName}`)
+
+    link(rel="icon" type="image/png" id="icon-png" href=`/media?file=${user.Media.UploadFileName}`)
 
     link(href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet")
     link(href="/css/theme.css" rel="stylesheet")
@@ -41,4 +51,3 @@ html
       twitter-app
 
       script(src="/js/app.min.js")
-
