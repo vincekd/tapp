@@ -50,7 +50,7 @@ app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", 
     if (req.originalUrl.startsWith("/tweet/")) {
       const tweetUrlRegex = /^\/tweet\/([0-9]+)$/;
       const tweet = await tweetServ.get(req.originalUrl.match(tweetUrlRegex)[1])
-      title = `Tweet from @${user.ScreenName}`;
+      title = `Tweet by @${user.ScreenName}`;
       description = `${tweet.Text}`;
     }
 
