@@ -1,6 +1,6 @@
 {
   "name": "tapp",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A twitter profile page.",
   "author": "vincekd",
   "keywords": [
@@ -21,6 +21,9 @@
     "devstart": "NODE_ENV=development nodemon .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
+  },
+  "nodemonConfig": {
+    "ignore": ["src/*", "dist/*"]
   },
   "dependencies": {
     "@angular/animations": "~5.2.11",

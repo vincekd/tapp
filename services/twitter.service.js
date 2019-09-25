@@ -163,6 +163,8 @@ class TwitterService {
 
   normalizeTwitterUser(u) {
     const imgUrl = u.profile_image_url_https;
+    const rev = imgUrl.match(/([0-9]+)\/.+\.[a-z]+$/)[1];
+    const entities = (u.entities || {});
     return {
       Id: u.id,
       IdStr: u.id_str,
@@ -170,23 +172,38 @@ class TwitterService {
       Url: TWITTER_URL + u.screen_name,
 	  ProfileImageUrlHttps: imgUrl,
 	  Name: u.name,
-	  Description: u.description,
+	  Description: this.replaceLinks(u.description, entities.description),
 	  Followers: u.followers_count,
 	  Following: u.friends_count,
 	  TweetCount: u.statuses_count,
 	  Location: u.location,
 	  Verified: u.verified,
-      Link: u.url,
+      Link: this.replaceLinks(u.url, entities.url),
       Updated: Math.round(Date.now() / 1000),
+      CreatedAt: u.created_at,
       Media: {
         IdStr: "avatar-" + u.id_str,
 		Url: imgUrl,
 		ExpandedUrl: imgUrl,
 		Type: "text",
 		MediaUrl: imgUrl,
-		UploadFileName: "user/" + u.id_str + "/avatar" + path.extname(imgUrl),
+		UploadFileName: `user/${u.id_str}/avatar-${rev}${path.extname(imgUrl)}`,
       }
     };
+  }
+
+  replaceLinks(str, o) {
+    if (!str) {
+      return "";
+    }
+    if (!o || !o.urls) {
+      return str;
+    }
+    o.urls.forEach(u => {
+      const re = new RegExp("(^|\\b)" + u.url.replace(".", "\\.") + "(\\b|$)", "ig");
+      str = str.replace(re, u.expanded_url);
+    });
+    return str;
   }
 
   getRatio(favs, rts) {

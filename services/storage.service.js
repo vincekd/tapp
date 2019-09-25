@@ -2,15 +2,13 @@ const { Storage } = require("@google-cloud/storage");
 const StatusCodes = require("http-status-codes");
 const config = require("../config.js");
 
-
-
 class StorageService {
   constructor() {
     this.storage = new Storage();
     let bucketName = config.get("bucketName");
-    if (config.get("NODE_ENV") === "development") {
-      bucketName = "staging."+ bucketName;
-    }
+    // if (config.get("NODE_ENV") === "development") {
+    //   bucketName = "staging."+ bucketName;
+    // }
     this.bucket = this.storage.bucket(bucketName);
   }
 

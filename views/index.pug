@@ -44,10 +44,13 @@ html
 
     link(rel="icon" type="image/png" id="icon-png" href=`/media?file=${user.Media.UploadFileName}`)
 
-    link(href="/media/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet")
+    link(href="/assets/twitter-fontello/css/tweet-icons.css" type="text/css" rel="stylesheet")
     link(href="/css/theme.css" rel="stylesheet")
     link(href="/css/main.css" rel="stylesheet")
   body
       twitter-app
 
-      script(src="/js/app.min.js")
+      if !isDev
+          script(src="/js/app.min.js")
+      else
+          script(src="/js/app.js")

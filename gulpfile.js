@@ -1,31 +1,23 @@
-const gulp = require("gulp"),
-      sass = require("gulp-sass"),
-      mkdirp = require("mkdirp"),
-      Builder = require("systemjs-builder"),
-      rename = require("gulp-rename"),
-      uglify = require("gulp-uglify-es").default,
-      ts = require("gulp-typescript");
+const gulp = require("gulp");
+const sass = require("gulp-sass");
+const mkdirp = require("mkdirp");
+const Builder = require("systemjs-builder");
+const rename = require("gulp-rename");
+const uglify = require("gulp-uglify-es").default;
+const ts = require("gulp-typescript");
 
-// gulp.task("default", "init-dist", "sass", "ts", "build", "uglify"], function() {
-//     console.log();
-//     console.log("!!! remember to remove 'node_modules' from app.yaml !!!");
-//     console.log();
-// });
-gulp.task("dev-watch", function() {
-  gulp.watch("./src/scss/*", ["sass"]);
-  gulp.watch("./src/ts/*", ["ts"]);
-});
 gulp.task("init-dist", initDist);
 gulp.task("sass", gulp.series("init-dist", compileSass));
 gulp.task("ts", gulp.series("init-dist", compileTs));
 gulp.task("build", gulp.series("ts", "sass", build));
 gulp.task("uglify", gulp.series("build", uglifyPkg));
-gulp.task("deploy", () => {
-  // run: `goapp deploy -application ${APPNAME} -version tapp-$VERSION_NUM`;
-});
-gulp.task("run-server", () => {
-  // run: python2.7 ../PATH/TO/dev_appserver.py --default_gcs_bucket_name ${APPNAME}.appspot.com app.yaml
-});
+
+gulp.task("dev-watch", gulp.series("build", function(cb) {
+  process.env['NODE_ENV'] = 'development';
+  gulp.watch("./src/scss/*", gulp.series("sass"));
+  gulp.watch("./src/ts/**/*.ts", gulp.series("ts", build));
+  cb();
+}));
 
 function initDist() {
   return Promise.all([
@@ -50,7 +42,7 @@ function build() {
       builder.buildStatic("dist/js/main.js", "dist/js/app.js", {
         //"minify": true,
         //"format": "es6",
-        "sourceMaps": false
+        "sourceMaps": process.env['NODE_ENV'] === 'development'
       }).then(() => {
         console.log("done building static app");
         resolve();

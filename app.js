@@ -28,7 +28,7 @@ app.set('trust proxy', true);
 // Static files
 app.use("/js/", express.static("dist/js"));
 app.use("/css/", express.static("dist/css"));
-app.use("/media/", express.static('media'));
+app.use("/assets/", express.static('assets'));
 app.use("/templates/", express.static("templates"));
 app.get("/service-worker.js", (req, res) => {
   res.sendFile(path.join(__dirname, 'dist/js/service-worker.js'));
