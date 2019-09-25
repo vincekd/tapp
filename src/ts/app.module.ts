@@ -3,9 +3,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import {
-  CommonModule
-} from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {
   MatMenuModule,
@@ -19,7 +17,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 // project imports
-import { TwitterAppComponent, } from "./components/twitter-app.component";
+import { TwitterAppComponent, } from "./twitter-app.component";
 import { MenuComponent, } from "./components/menu.component";
 import { LatestComponent, } from "./components/latest.component";
 import { BestComponent, } from "./components/best.component";
@@ -71,7 +69,7 @@ const appRoutes: Routes = [
     ErrorPageComponent,
     CapitalizePipe,
     ReplaceMediaPipe,
-    TweetDatePipe
+    TweetDatePipe,
   ],
   providers: [UserService, TweetService, AnalyticsService],
   bootstrap: [TwitterAppComponent]

@@ -38,15 +38,36 @@ app.get("/favicon.ico", (req, res) => {
 });
 
 // pages
-app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", "/tweet/:tweetID"], (req, res) => {
-  userServ.get(config.get("screenName")).then(user => {
+app.get(["/", "/index.html", "/index", "/latest", "/best", "/search", "/error", "/tweet/:tweetID"], async (req, res) => {
+  try {
+    const user = await userServ.get(config.get("screenName"));
     const gaKey = config.get("gaTrackingId");
+    const host = req.get('host');
+
+    const type = (req.originalUrl.startsWith("/latest") ? "Latest" : "Best");
+    let title = `${type} Tweets by @${user.ScreenName}`;
+    let description = `${user.Description}`;
+    if (req.originalUrl.startsWith("/tweet/")) {
+      const tweetUrlRegex = /^\/tweet\/([0-9]+)$/;
+      const tweet = await tweetServ.get(req.originalUrl.match(tweetUrlRegex)[1])
+      title = `Tweet from @${user.ScreenName}`;
+      description = `${tweet.Text}`;
+    }
+
     res.render("index",  {
+      og: {
+        title,
+        description,
+        url: req.protocol + '://' + host + req.originalUrl,
+        site_url: host,
+      },
       user,
       gaKey,
       isDev: isDev(),
     });
-  });
+  } catch (e) {
+    error(res, e);
+  }
 });
 // TODO: admin protection
 // app.get("/admin", (req, res) => {

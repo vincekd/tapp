@@ -31,16 +31,15 @@ html
 
     base(href="/")
 
-    - let description = `@${user.ScreenName}'s tweets --- ${user.Description}`;
-    meta(name="description" content=description)
+    meta(name="description" content=og.description)
     title=user.ScreenName
 
     meta(property="og:type" content="article")
-    meta(property="og:site_name" content="/")
-    meta(property="og:title" content=`@${user.ScreenName}'s tweets`)
-    meta(property="og:description" content=description)
-    meta(property="og:url" content="/")
-    meta(property="og:media" content=`/media?file=${user.Media.UploadFileName}`)
+    meta(property="og:site_name" content=`@${user.ScreenName}`)
+    meta(property="og:title" content=`${og.title}`)
+    meta(property="og:description" content=og.description)
+    meta(property="og:url" content=`${og.url}`)
+    meta(property="og:image" content=`${og.site_url}/media?file=${user.Media.UploadFileName}`)
 
     link(rel="icon" type="image/png" id="icon-png" href=`/media?file=${user.Media.UploadFileName}`)
 

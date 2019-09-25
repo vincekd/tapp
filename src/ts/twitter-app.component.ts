@@ -1,12 +1,12 @@
 import { Component, OnInit, } from '@angular/core';
 import { Router, NavigationEnd, } from '@angular/router';
 
-import { routerTransition } from '../app.animations';
+import { routerTransition } from './app.animations';
 
-import { UserService } from "../services/user.service";
-import { AnalyticsService } from '../services/analytics.service';
+import { UserService } from "./services/user.service";
+import { AnalyticsService } from './services/analytics.service';
 
-import { User } from '../interfaces/user';
+import { User } from './interfaces/user';
 
 @Component({
   selector: 'twitter-app',
