@@ -185,14 +185,13 @@ app.get("/feed/latest.xml", handleAjax(async (req, res) => {
     name: `@${name}`,
     link: `${user.Url}`,
   };
+  const host = req.get("host");
   const feed = new Feed({
     title: "@" + name + " Latest Tweets",
     description: "Latest tweets by @" + name,
-    id: config.get("siteUrl"),
-    link: config.get("siteUrl"),
+    id: host,
+    link: host,
     language: "en",
-    //image: "http://example.com/image.png",
-    //favicon: "http://example.com/favicon.ico",
     copyright: `All rights reserved ${(new Date()).getFullYear()}, @${name}`,
     author,
   });
@@ -206,17 +205,13 @@ app.get("/feed/latest.xml", handleAjax(async (req, res) => {
       content: tweet.Text,
       author: [author],
       date: new Date(tweet.Created * 1000),
-      //image: "asdf"
+      //image: ""
     });
   });
 
   res.setHeader("Content-Type", "application/atom+xml; charset=utf-8");
   res.status(StatusCodes.OK).send(feed.atom1());
 }));
-
-// app.get("/unretweet", validateCron((req, res) => {
-
-// }));
 
 function validateCron(handler) {
   return (req, res) => {
